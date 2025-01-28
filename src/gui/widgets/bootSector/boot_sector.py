@@ -30,12 +30,6 @@ class BootSectorTab(QWidget):
         for col, header_text in enumerate(headers):
             header = QLabel(header_text)
             header.setObjectName("HeaderLabel")
-            header.setStyleSheet("""
-                QLabel {
-                    padding: 8px;
-                    font-weight: bold;
-                }
-            """)
             header.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
             grid_layout.addWidget(header, 0, col)
 

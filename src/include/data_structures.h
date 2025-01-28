@@ -10,9 +10,10 @@
 
 /* Boot Sector: First 16 clusters reserved */
 
+#pragma pack(push, 1)
 typedef struct {
-	uint32_t jump_instruction;
-    uint64_t oem_name;
+	uint8_t jump_instruction[3];
+    char oem_name[8];
     uint16_t bytes_x_sector;
     uint8_t sectors_x_cluster;
     uint16_t reserved_sectors;
@@ -31,6 +32,7 @@ typedef struct {
     uint8_t boot_code[426];
     uint16_t signature;
 } bootSector;
+#pragma pack(pop)
 
 #define BS_MAGIC 0xAA55 // Signature
 
@@ -101,8 +103,8 @@ typedef struct {
     uint16_t flags;
     uint16_t attr_id;
     union {
-        resident resident;
-        non_resident non_resident;
+        resident resident_attr;
+        non_resident non_resident_attr;
     } content;
 } mftAttr;
 
@@ -300,9 +302,9 @@ typedef struct {
 } attrDef;
 
 // Flags
-#define ATTR_INDEX 0x00000002
-#define ATTR_RESIDENT 0x00000004
-#define ATTR_NONRESIDENT 0x00000008
+#define ATTRDEF_INDEX 0x00000002
+#define ATTRDEF_RESIDENT 0x00000004
+#define ATTRDEF_NONRESIDENT 0x00000008
 
 // $ObjId
 
