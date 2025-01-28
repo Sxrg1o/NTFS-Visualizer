@@ -16,10 +16,6 @@ class Tabs(QWidget):
         self.tab_widget.addTab(self.mft_tab, "MFT")
         self.tab_widget.addTab(self.data_area_tab, "Data Area")
         
-        boot_sector_layout = QVBoxLayout()
-        boot_sector_layout.addWidget(QLabel("Boot Sector Tab Content"))
-        self.boot_sector_tab.setLayout(boot_sector_layout)
-        
         mft_layout = QVBoxLayout()
         mft_layout.addWidget(QLabel("MFT Tab Content"))
         self.mft_tab.setLayout(mft_layout)

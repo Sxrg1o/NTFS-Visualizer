@@ -107,8 +107,8 @@ typedef struct {
 } mftAttr;
 
 // Flags
-#define ATTR_RESIDENT 0
-#define ATTR_NONRESIDENT 1
+#define ATTR_RESIDENT 0x00
+#define ATTR_NONRESIDENT 0x01
 
 #define ATTR_COMPRESSED 0x0001
 #define ATTR_ENCRYPTED 0x4000
@@ -187,10 +187,10 @@ typedef struct {
 	uint8_t name_space;
 } fileName;
 
-#define NAMEPSACE_POSIX 0
-#define NAMEPSACE_WIN32 1
-#define NAMEPSACE_DOS 2
-#define NAMEPSACE_WIN_DOS 3
+#define NAMEPSACE_POSIX 0x00
+#define NAMEPSACE_WIN32 0x01
+#define NAMEPSACE_DOS 0x02
+#define NAMEPSACE_WIN_DOS 0x03
 
 // $STANDARD_INFORMATION
 

@@ -15,7 +15,7 @@ QLabel {
 }
 
 QPushButton {
-    background-color: #747474;
+    background-color: #999999;
     color: white;
     border: none;
     padding: 5px 15px;
@@ -54,6 +54,14 @@ QMenu::item:selected {
     border: 2px dotted #3d3d3d;
 }
 
+#BodyFrame {
+    background-color: #f0f0f0;
+    font-size: 11pt;
+}
+
+#HeaderLabel {
+    background-color: #e0e0e0;
+}
 
 /* Dark theme */
 .dark QMainWindow, .dark QWidget {
@@ -107,4 +115,13 @@ QMenu::item:selected {
 .dark #dottedFrame {
     background-color: #2d2d2d;
     border: 2px dotted #909090;
+}
+
+.dark #BodyFrame {
+    background-color: #2d2d2d;  
+    font-size: 11pt;
+}
+
+.dark #HeaderLabel {
+    background-color: #404040;
 }
