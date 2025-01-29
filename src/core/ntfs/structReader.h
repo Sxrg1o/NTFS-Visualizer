@@ -46,32 +46,6 @@ public:
                          initialPos);
         
         return true;
-    }
-
-    // Prints an array of bytes in hexadecimal format
-    template <typename T, size_t N>
-    static void printArrayHex(const T (&array)[N], const std::string& label) {
-        std::cout << label << ": ";
-        for (size_t i = 0; i < N; ++i) {
-            std::cout << std::hex << std::uppercase 
-                    << (int)array[i] << " ";
-        }
-        std::cout << std::dec << "\n";
-    }
-    
-    // Testing method to print specific fields of bootSector
-    static void printBootSectorInfo(const bootSector& bs) {
-        std::cout << "\nInformación del Boot Sector:\n";
-        printArrayHex(bs.jump_instruction, "Jump Instruction");
-        std::cout << "OEM ID: " << bs.oem_name << "\n";
-        std::cout << "Bytes por sector: " << bs.bytes_x_sector << "\n"; 
-        std::cout << "Sectores por cluster: " << (int)bs.sectors_x_cluster << "\n";
-        std::cout << "Sectores reservados: " << bs.reserved_sectors << "\n";
-        std::cout << "Sectores por volumen: " << bs.sectors_x_volume << "\n";
-        std::cout << "Cluster MFT inicio: " << bs.cluster_MFT_start << "\n";
-        std::cout << "Tamaño de entrada: " << (int)bs.entry_size << "\n";
-        std::cout << "Número serial: 0x" << std::hex << bs.serial_number << std::dec << "\n";
-        std::cout << "Firma: 0x" << std::hex << bs.signature << std::dec << "\n";
-    }
+    }    
 
 };

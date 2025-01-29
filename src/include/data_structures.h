@@ -6,14 +6,14 @@
  * Carrier - File System Forensic Analysis Chapter 13: NTFS Data Structures
  * and The Sleuth Kit source code */ 
 
-#define FS_MAGIC 0x5346544E // "NTFS"
+#define FS_MAGIC 0x202020205346544E // "NTFS"
 
 /* Boot Sector: First 16 clusters reserved */
 
 #pragma pack(push, 1)
 typedef struct {
 	uint8_t jump_instruction[3];
-    char oem_name[8];
+    uint64_t oem_name;
     uint16_t bytes_x_sector;
     uint8_t sectors_x_cluster;
     uint16_t reserved_sectors;
@@ -38,6 +38,7 @@ typedef struct {
 
 /* Basic MFT entry */
 
+#pragma pack(push, 1)
 typedef struct {
 	uint32_t signature;
     uint16_t fixup_off;
@@ -52,6 +53,7 @@ typedef struct {
 	uint8_t base_reference[6];
 	uint16_t next_attr_id;
 } mftEntry;
+#pragma pack(pop)
 
 #define MFT_MAGIC 0x454c4946 		// "FILE"
 #define MFT_MAGIC_BAD 0x44414142	// "BAAD"
@@ -132,6 +134,7 @@ typedef struct {
 
 // $INDEX_ROOT attribute header
 
+#pragma pack(push, 1)
 typedef struct {
     uint32_t type;
     uint32_t collation_rule;
@@ -140,6 +143,7 @@ typedef struct {
     uint8_t unused[3];
     idxNode_head head;
 } idxRoot_head;
+#pragma pack(pop)
 
 // Index Record header
 typedef struct {
@@ -155,6 +159,7 @@ typedef struct {
 
 // Generic index entry (also for directory)
 
+#pragma pack(push, 1)
 typedef struct {
 	uint8_t file_ref[6]; 
 	uint16_t seq_number;
@@ -164,6 +169,7 @@ typedef struct {
     uint8_t useless[3];
     uint8_t stream;
 } idxEntry;
+#pragma pack(pop)
 
 #define IDX_SUBNODE 0x00000001
 #define IDX_LAST 0x00000002
@@ -175,6 +181,7 @@ typedef struct {
 
 // $FILE_NAME
 
+#pragma pack(push, 1)
 typedef struct {
 	uint8_t parent_reference[6];
 	uint16_t seq_number;
@@ -188,6 +195,7 @@ typedef struct {
 	uint8_t name_length;
 	uint8_t name_space;
 } fileName;
+#pragma pack(pop)
 
 #define NAMEPSACE_POSIX 0x00
 #define NAMEPSACE_WIN32 0x01
@@ -253,6 +261,7 @@ typedef struct {
 
 // $ATTRIBUTE_LIST
 
+#pragma pack(push, 1)
 typedef struct {
 	uint32_t type;
 	uint16_t length;
@@ -263,15 +272,18 @@ typedef struct {
 	uint16_t seq_number;
 	uint16_t id;
 } attrList;
+#pragma pack(pop)
 
 // $OBJECT_ID
 
+#pragma pack(push, 1)
 typedef struct {
 	uint64_t object_id[2];
 	uint64_t birth_volume_id[2];
 	uint64_t birth_object_id[2];
 	uint64_t birth_domain_id[2];
 } objectId_attr;
+#pragma pack(pop)
 
 // $REPARSE_POINT
 
@@ -291,6 +303,7 @@ typedef struct {            // Offset from byte 16 (end of struct)
 
 // $AttrDef
 
+#pragma pack(push, 1)
 typedef struct {
 	uint64_t name[16];
 	uint32_t type;
@@ -300,6 +313,7 @@ typedef struct {
 	uint64_t min_size;
 	uint64_t max_size;
 } attrDef;
+#pragma pack(pop)
 
 // Flags
 #define ATTRDEF_INDEX 0x00000002
@@ -308,6 +322,7 @@ typedef struct {
 
 // $ObjId
 
+#pragma pack(push, 1)
 typedef struct {
 	uint16_t offset;
 	uint16_t size;
@@ -321,6 +336,7 @@ typedef struct {
 	uint64_t birth_object_id[2];
 	uint64_t birth_domain_id[2];
 } objId_file;
+#pragma pack(pop)
 
 // Flags are IDX_SUBNODE and IDX_LAST  
 
@@ -341,6 +357,7 @@ typedef struct {
 
 // $Q index
 
+#pragma pack(push, 1)
 typedef struct {
 	uint16_t info_offset;
 	uint16_t info_length;
@@ -358,6 +375,7 @@ typedef struct {
 	uint64_t exceeded_time;
 	uint32_t SID[3];
 } q_quota;
+#pragma pack(pop)
 
 #define DEFAULT_LIMITS 0x00000001
 #define LIMIT_REACHED 0x00000002
