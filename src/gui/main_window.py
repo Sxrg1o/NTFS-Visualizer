@@ -16,12 +16,13 @@ class MainWindow(QMainWindow):
         
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
-        
+
+        self.generate_screen = Tabs()
+
         self.welcome_screen = QMainWindow()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self.welcome_screen)
-        
-        self.generate_screen = Tabs()
+        self.ui.main_window = self
         
         self.stacked_widget.addWidget(self.welcome_screen)
         self.stacked_widget.addWidget(self.generate_screen)

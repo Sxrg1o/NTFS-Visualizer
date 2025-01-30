@@ -7,10 +7,15 @@
 
 
 from PyQt6 import QtCore, QtGui, QtWidgets
-
+import bindings
+from .bootSector.boot_sector import BootSectorTab 
 
 class Ui_MainWindow(object):
+    def __init__(self):
+        self.boot_sector_tab = None
+
     def setupUi(self, MainWindow):
+        self.main_window = MainWindow
         self.centralwidget = QtWidgets.QWidget(parent=MainWindow)
         self.centralwidget.setObjectName("centralwidget")
 
@@ -62,6 +67,7 @@ class Ui_MainWindow(object):
         self.pushButton = QtWidgets.QPushButton(parent=self.frame_2)
         self.pushButton.setGeometry(QtCore.QRect(256, 190, 100, 27))
         self.pushButton.setObjectName("pushButton")
+        self.pushButton.clicked.connect(self.open_file_dialog)
 
         self.pushButton_2 = QtWidgets.QPushButton(parent=self.frame)
         self.pushButton_2.setGeometry(QtCore.QRect(500, 640, 160, 60))
@@ -81,6 +87,8 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        MainWindow.closeEvent = self.closeEvent
+
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -94,3 +102,38 @@ class Ui_MainWindow(object):
         self.actionGenerate.setText(_translate("MainWindow", "Generate"))
         self.actionFile.setText(_translate("MainWindow", "File"))
         self.actionPartition.setText(_translate("MainWindow", "Partition"))
+
+    def open_file_dialog(self):
+        file_dialog = QtWidgets.QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(None, "Select NTFS Image", "", "All Files (*);;NTFS Images (*.img *.bin)")
+        
+        if file_path:
+            boot_sector_data = bindings.read_image(file_path)
+            if boot_sector_data:  
+                boot_sector_tab = self.main_window.generate_screen.get_boot_sector_tab()
+                if boot_sector_tab:
+                    self.show_boot_sector_data(boot_sector_data, boot_sector_tab)
+
+    def show_boot_sector_data(self, boot_sector_data, boot_sector_tab):
+        data = [
+            ("Jump Instruction:", boot_sector_data["jump_instruction"], "0-2"),
+            ("OEM ID:", boot_sector_data["oem_name"], "3-10"),
+            ("Bytes Per Sector:", str(boot_sector_data["bytes_x_sector"]), "11-12"),
+            ("Sectors Per Cluster:", str(boot_sector_data["sectors_x_cluster"]), "13-13"),
+            ("Reserved Sectors:", str(boot_sector_data["reserved_sectors"]), "14-15"),
+            ("Media Descriptor:", boot_sector_data["media_descriptor"], "21-21"),
+            ("Total Sectors:", str(boot_sector_data["sectors_x_volume"]), "40-47"),
+            ("MFT Cluster Number:", str(boot_sector_data["cluster_MFT_start"]), "48-55"),
+            ("Size of MFT Entry:", str(boot_sector_data["entry_size"]), "64-64"),
+            ("Size of Index Record:", str(boot_sector_data["index_size"]), "68-68"),
+            ("Serial number:", f"{boot_sector_data['serial_number']:016X}", "72-79")
+        ]
+
+        boot_sector_tab.update_data(data)
+        self.main_window.go_to_generate_screen()
+        self.main_window.generate_screen.set_current_tab("Boot Sector")
+
+
+    def closeEvent(self, event):
+        bindings.close_image()
+        event.accept()
