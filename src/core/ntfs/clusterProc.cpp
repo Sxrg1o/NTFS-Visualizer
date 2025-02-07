@@ -4,12 +4,17 @@
 #include "../../include/image.h"
 #include "../../include/clusterProc.h"
 #include "../../include/HexPrinter.h"
+#include "../../include/entryProc.h"
+#include <vector>
 
 ntfsImage image = {};
 bootSector bs = {};
 
+
+/*****  Reading the boot sector   *****/
+
 bool read_boot_sector(const std::unique_ptr<Reader>& reader) {
-    reader->seek(0);    // Boot sector always at offset 0
+    reader->seek(0, false);    // Boot sector always at offset 0
     if (!StructReader::read(bs, reader.get())) {
         std::cerr << "Error reading file/partition" << std::endl; 
         return false;
@@ -19,6 +24,7 @@ bool read_boot_sector(const std::unique_ptr<Reader>& reader) {
     image.cluster_MFT_start = bs.cluster_MFT_start;
     image.entry_size = bs.entry_size;
     image.index_size = bs.index_size;
+    image.sectors_x_volume = bs.sectors_x_volume;
 
     return true;
 }
@@ -58,4 +64,17 @@ std::string boot_sector_hex() {
     return ss.str();
 }
 
+/*****  Reading cluster info  *****/
+
+ClusterStatus analyze_clusters() {
+    ClusterStatus status;
+    uint64_t total_clusters = image.sectors_x_volume / image.sectors_x_cluster;
+    // Read $Bitmap structure
+    mftEntry bitmap_entry = read_mft_entry(global_reader, 6);
+    // Now we read $DATA from the bitmap
+    // Need to add function to read data from an attribute (attrProc.cpp)
+
+
+    return status;
+}
 

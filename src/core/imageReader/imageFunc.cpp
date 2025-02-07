@@ -14,10 +14,10 @@ bool is_ntfs() {
         return false;
     }
 
-    global_reader->seek(3);
+    global_reader->seek(3, false);
     uint64_t oem_name;
     global_reader->read(reinterpret_cast<uint8_t*>(&oem_name), 8);
-    global_reader->seek(0); // Reset
+    global_reader->seek(0, false); // Reset
 
     if(oem_name != FS_MAGIC) {
         global_reader->close();

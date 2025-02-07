@@ -9,6 +9,15 @@
 
 namespace py = pybind11;
 
+struct ClusterStatus {
+    enum Type {
+        USED = 0,
+        FREE = 1,
+        BAD = 2
+    };
+    std::vector<Type> clusters;
+};
+
 bool read_boot_sector(const std::unique_ptr<Reader>&);
 py::dict boot_sector_dict();
 std::string boot_sector_hex();

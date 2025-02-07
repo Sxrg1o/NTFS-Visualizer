@@ -21,9 +21,9 @@ public:
     // Closes the resource
     virtual void close() = 0;
     
-    // Moves the cursor relative to the current position
+    // Moves the cursor to the current position
     // Returns the new position or -1 in case of error
-    virtual int64_t seek(int64_t offset) = 0;
+    virtual int64_t seek(int64_t offset, bool relative = false) = 0;
     
     // Reads size bytes and stores them in buffer
     // Returns the number of bytes read or -1 in case of error
@@ -53,12 +53,16 @@ public:
         currentPos = 0;
     }
     
-    int64_t seek(int64_t offset) override { // Absolute position 
-        file.seekg(offset, std::ios::beg);
-        if (file.fail()) {
-            return -1;
+    int64_t seek(int64_t offset, bool relative) override { // Absolute position 
+        if(relative) {
+            file.seekg(offset, std::ios::cur);
+            if (file.fail()) return -1;
+            currentPos += offset;
+        } else {
+            file.seekg(offset, std::ios::beg);
+            if (file.fail()) return -1;
+            currentPos = offset;
         }
-        currentPos = offset;
         return currentPos;
     }
     
@@ -108,12 +112,16 @@ public:
         currentPos = 0;
     }
     
-    int64_t seek(int64_t offset) override {
-        auto newPos = ::lseek(fd, offset, SEEK_CUR);
-        if (newPos == -1) {
-            return -1;
+    int64_t seek(int64_t offset, bool relative) override {
+        if (relative) {
+            auto newPos = ::lseek(fd, offset, SEEK_CUR);
+            if (newPos == -1) return -1;
+            currentPos += newPos;
+        } else {
+            auto newPos = ::lseek(fd, offset, SEEK_SET);
+            if (newPos == -1) return -1;
+            currentPos = newPos;
         }
-        currentPos = newPos;
         return currentPos;
     }
     

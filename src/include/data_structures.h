@@ -52,7 +52,7 @@ typedef struct {
     uint32_t alloc_size;
 	uint8_t base_reference[6];
 	uint16_t next_attr_id;
-} mftEntry;
+} mftEntryHeader;
 #pragma pack(pop)
 
 #define MFT_MAGIC 0x454c4946 		// "FILE"
@@ -81,7 +81,7 @@ typedef struct {
 typedef struct {
 	uint32_t size;
     uint16_t offset;
-} resident;
+} residentData;
 
 //Non-resident attribute
 
@@ -94,7 +94,7 @@ typedef struct {
     uint64_t alloc_size;
     uint64_t actual_size;
     uint64_t init_size;
-} non_resident;
+} non_residentData;
 
 typedef struct {
 	uint32_t type;
@@ -104,11 +104,7 @@ typedef struct {
     uint16_t name_off;
     uint16_t flags;
     uint16_t attr_id;
-    union {
-        resident resident_attr;
-        non_resident non_resident_attr;
-    } content;
-} mftAttr;
+} mftAttrHeader;
 
 // Flags
 #define ATTR_RESIDENT 0x00
@@ -117,6 +113,8 @@ typedef struct {
 #define ATTR_COMPRESSED 0x0001
 #define ATTR_ENCRYPTED 0x4000
 #define ATTR_SPARSE 0x8000
+
+#define END_OF_ENTRY 0xFFFFFFFF 
 
 /* Index data structures */
 
