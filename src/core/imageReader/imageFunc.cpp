@@ -20,11 +20,9 @@ bool is_ntfs() {
     global_reader->seek(0); // Reset
 
     if(oem_name != FS_MAGIC) {
-        std::cerr << "Not an NTFS image" << std::endl;
         global_reader->close();
         return false;
     } else {
-        std::cout << "Found NTFS image" << std::endl;
         return true;
     }
 }

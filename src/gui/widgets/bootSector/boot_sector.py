@@ -14,42 +14,42 @@ class BootSectorTab(QWidget):
         container_layout.setContentsMargins(20, 20, 50, 100)
         container_layout.setSpacing(100)  
 
-        table_widget = QWidget()
-        main_layout = QVBoxLayout(table_widget)
+        content_widget = QWidget()
+        main_layout = QVBoxLayout(content_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
 
-        self.frame = QFrame() 
-        self.frame.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-        self.frame.setObjectName("BodyFrame")
+        self.header_frame = QFrame()
+        self.header_frame.setObjectName("BodyFrame")
+        self.header_layout = QGridLayout(self.header_frame)
+        self.header_layout.setSpacing(0)
+        self.header_layout.setContentsMargins(0, 0, 0, 0)
 
-        grid_layout = QGridLayout(self.frame)
-        grid_layout.setSpacing(0)
-        grid_layout.setContentsMargins(0, 0, 0, 0)
-        self.grid_layout = grid_layout
+        self.content_frame = QFrame()
+        self.content_frame.setObjectName("BodyFrame")
+        self.content_layout = QGridLayout(self.content_frame)
+        self.content_layout.setSpacing(0)
+        self.content_layout.setContentsMargins(0, 0, 0, 0)
 
-        headers = ["Description", "Value", "Bytes"]
-        for col, header_text in enumerate(headers):
-            header = QLabel(header_text)
-            header.setObjectName("HeaderLabel")
-            header.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-            grid_layout.addWidget(header, 0, col)
+        main_layout.addWidget(self.header_frame)
+        main_layout.addWidget(self.content_frame)
 
-        grid_layout.setColumnStretch(0, 2)
-        grid_layout.setColumnStretch(1, 2)
-        grid_layout.setColumnStretch(2, 1)
-
-        main_layout.addWidget(self.frame)
+        self.raw_text_edit = QTextEdit()
+        self.raw_text_edit.setReadOnly(True)
+        self.raw_text_edit.setFont(QFont("Courier", 12))
+        self.raw_text_edit.hide()
+        main_layout.addWidget(self.raw_text_edit)
 
         button_layout = QVBoxLayout()
         button_layout.setContentsMargins(0, 50, 0, 0)
-        button_layout.setSpacing(15) 
+        button_layout.setSpacing(15)
 
         self.button_structured = QPushButton("Structured")
         self.button_raw = QPushButton("Raw")
         self.button_structured.setCheckable(True)
         self.button_raw.setCheckable(True)
         self.button_structured.setChecked(True)
+        self.button_structured.setEnabled(False)
 
         self.button_structured.setFixedSize(150, 40)
         self.button_raw.setFixedSize(150, 40)
@@ -59,62 +59,102 @@ class BootSectorTab(QWidget):
 
         button_layout.addWidget(self.button_structured)
         button_layout.addWidget(self.button_raw)
-        button_layout.addStretch()  
+        button_layout.addStretch()
 
-        container_layout.addWidget(table_widget)
+        container_layout.addWidget(content_widget)
         container_layout.addLayout(button_layout)
 
-        self.raw_text_edit = QTextEdit()
-        self.raw_text_edit.setReadOnly(True)
-        self.raw_text_edit.setVisible(False)
-        self.raw_text_edit.setFont(QFont("Courier", 12)) 
-        main_layout.addWidget(self.raw_text_edit)
+        self.setup_structured_view()
+
+    def clear_layout(self, layout):
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
+
+    def setup_structured_view(self):
+        self.clear_layout(self.header_layout)
+        self.clear_layout(self.content_layout)
+
+        headers = ["Description", "Value", "Bytes"]
+        for col, header_text in enumerate(headers):
+            header = QLabel(header_text)
+            header.setObjectName("HeaderLabel")
+            header.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            header.setFixedHeight(header.fontMetrics().height() + 30)
+            self.header_layout.addWidget(header, 0, col)
+
+        self.header_layout.setColumnStretch(0, 2)
+        self.header_layout.setColumnStretch(1, 2)
+        self.header_layout.setColumnStretch(2, 1)
+
+        self.content_layout.setColumnStretch(0, 2)
+        self.content_layout.setColumnStretch(1, 2)
+        self.content_layout.setColumnStretch(2, 1)
+
+    def setup_raw_view(self):
+        self.clear_layout(self.header_layout)
+        self.clear_layout(self.content_layout)
+
+        headers = ["Offset", "Bytes", "ASCII"]
+        for col, header_text in enumerate(headers):
+            header = QLabel(header_text)
+            header.setObjectName("HeaderLabel")
+            header.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            header.setFixedHeight(header.fontMetrics().height() + 30)
+            self.header_layout.addWidget(header, 0, col)
+
+        self.header_layout.setColumnStretch(0, 1)
+        self.header_layout.setColumnStretch(1, 1)
+        self.header_layout.setColumnStretch(2, 1)
 
     def on_structured_clicked(self):
-        if not self.button_structured.isChecked():
-            self.button_structured.setChecked(True)
+        self.button_structured.setEnabled(False)
+        self.button_structured.setChecked(True)
         self.button_raw.setChecked(False)
+        self.button_raw.setEnabled(True)
+        
+        self.setup_structured_view()
         self.show_boot_sector_data()
-        self.frame.setVisible(True) 
-        self.raw_text_edit.setVisible(False)  
+        
+        self.content_frame.show()
+        self.raw_text_edit.hide()
     
     def on_raw_clicked(self):
-        if not self.button_raw.isChecked():
-            self.button_raw.setChecked(True)
+        self.button_raw.setEnabled(False)
+        self.button_raw.setChecked(True)
+        self.button_structured.setEnabled(True)
         self.button_structured.setChecked(False)
+
+        self.setup_raw_view()
         self.show_raw_boot_sector_data()
-        self.frame.setVisible(False)  
-        self.raw_text_edit.setVisible(True)  
+        
+        self.content_frame.hide()
+        self.raw_text_edit.show()
 
     def update_data(self, data):
-        for i in reversed(range(1, self.grid_layout.rowCount())):
-            for j in range(3):
-                item = self.grid_layout.itemAtPosition(i, j)
-                if item is not None:
-                    widget = item.widget()
-                    if widget is not None:
-                        widget.deleteLater()
+        self.clear_layout(self.content_layout)
 
-        for row, (desc, value, bytes_range) in enumerate(data, 1):
+        for row, (desc, value, bytes_range) in enumerate(data, 0):
             desc_label = QLabel(desc)
             desc_label.setStyleSheet("QLabel { padding: 8px; }")
             desc_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-            self.grid_layout.addWidget(desc_label, row, 0)
+            self.content_layout.addWidget(desc_label, row, 0)
 
             value_label = QLabel(value)
             value_label.setStyleSheet("QLabel { padding: 8px; }")
             value_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-            self.grid_layout.addWidget(value_label, row, 1)
+            self.content_layout.addWidget(value_label, row, 1)
 
             bytes_label = QLabel(bytes_range)
             bytes_label.setStyleSheet("QLabel { padding: 8px; }")
             bytes_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-            self.grid_layout.addWidget(bytes_label, row, 2)
+            self.content_layout.addWidget(bytes_label, row, 2)
 
     def show_raw_boot_sector_data(self):
         try:
             raw_data = bindings.boot_sector_hex()
-            print(raw_data)
             self.raw_text_edit.setPlainText(raw_data)
         except Exception as e:
             print(f"Error al mostrar los datos del sector de arranque: {str(e)}")
@@ -141,4 +181,4 @@ class BootSectorTab(QWidget):
 
             self.update_data(data)
         except Exception as e:
-            print(f"Error al mostrar los datos del sector de arranque: {str(e)}")
+            print(f"Error al mostrar los datos del sector de arranque: {str(e)}")   

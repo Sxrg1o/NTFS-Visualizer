@@ -66,7 +66,7 @@ class Ui_MainWindow(object):
 
         self.pushButton = QtWidgets.QPushButton(parent=self.frame_2)
         self.pushButton.setGeometry(QtCore.QRect(256, 190, 100, 27))
-        self.pushButton.setObjectName("pushButton")
+        self.pushButton.setObjectName("Examine")
         self.pushButton.clicked.connect(self.open_file_dialog)
 
         self.pushButton_2 = QtWidgets.QPushButton(parent=self.frame)
@@ -74,7 +74,7 @@ class Ui_MainWindow(object):
         font = QtGui.QFont()
         font.setPointSize(18)
         self.pushButton_2.setFont(font)
-        self.pushButton_2.setObjectName("pushButton_2")
+        self.pushButton_2.setObjectName("Generate")
 
         MainWindow.setCentralWidget(self.centralwidget)
 
