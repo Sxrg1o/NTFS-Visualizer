@@ -2,7 +2,7 @@
 PYTHON = python3
 VENV = .venv/bin/python
 CXX = g++
-CXXFLAGS = -Wall -std=c++17 -Iinclude $(shell python3 -m pybind11 --includes)
+CXXFLAGS = -Wall -std=c++17 -fvisibility=default -Iinclude $(shell python3 -m pybind11 --includes)
 TARGET = proyecto
 SRC_DIR = src/core
 INCLUDE_DIR = include
@@ -13,7 +13,8 @@ ASSETS_DIR = assets
 # Archivos fuente
 CORE_SRCS = $(wildcard $(SRC_DIR)/*.cpp)
 READER_SRCS = $(wildcard $(SRC_DIR)/imageReader/*.cpp)
-SRCS = $(CORE_SRCS) $(READER_SRCS)
+NTFS_SRCS = $(wildcard $(SRC_DIR)/ntfs/*.cpp)
+SRCS = $(CORE_SRCS) $(READER_SRCS) $(NTFS_SRCS)
 
 # Nombre del módulo de Python
 MODULE_NAME = bindings

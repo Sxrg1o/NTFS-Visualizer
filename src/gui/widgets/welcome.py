@@ -106,33 +106,14 @@ class Ui_MainWindow(object):
     def open_file_dialog(self):
         file_dialog = QtWidgets.QFileDialog()
         file_path, _ = file_dialog.getOpenFileName(None, "Select NTFS Image", "", "All Files (*);;NTFS Images (*.img *.bin)")
-        
         if file_path:
-            boot_sector_data = bindings.read_image(file_path)
-            if boot_sector_data:  
-                boot_sector_tab = self.main_window.generate_screen.get_boot_sector_tab()
+            is_valid_image = bindings.read_image(file_path)
+            if is_valid_image:
+                self.main_window.go_to_tabs()
+                self.main_window.tabs.set_current_tab("Boot Sector")
+                boot_sector_tab = self.main_window.tabs.get_boot_sector_tab() 
                 if boot_sector_tab:
-                    self.show_boot_sector_data(boot_sector_data, boot_sector_tab)
-
-    def show_boot_sector_data(self, boot_sector_data, boot_sector_tab):
-        data = [
-            ("Jump Instruction:", boot_sector_data["jump_instruction"], "0-2"),
-            ("OEM ID:", boot_sector_data["oem_name"], "3-10"),
-            ("Bytes Per Sector:", str(boot_sector_data["bytes_x_sector"]), "11-12"),
-            ("Sectors Per Cluster:", str(boot_sector_data["sectors_x_cluster"]), "13-13"),
-            ("Reserved Sectors:", str(boot_sector_data["reserved_sectors"]), "14-15"),
-            ("Media Descriptor:", boot_sector_data["media_descriptor"], "21-21"),
-            ("Total Sectors:", str(boot_sector_data["sectors_x_volume"]), "40-47"),
-            ("MFT Cluster Number:", str(boot_sector_data["cluster_MFT_start"]), "48-55"),
-            ("Size of MFT Entry:", str(boot_sector_data["entry_size"]), "64-64"),
-            ("Size of Index Record:", str(boot_sector_data["index_size"]), "68-68"),
-            ("Serial number:", f"{boot_sector_data['serial_number']:016X}", "72-79")
-        ]
-
-        boot_sector_tab.update_data(data)
-        self.main_window.go_to_generate_screen()
-        self.main_window.generate_screen.set_current_tab("Boot Sector")
-
+                    boot_sector_tab.show_boot_sector_data()
 
     def closeEvent(self, event):
         bindings.close_image()

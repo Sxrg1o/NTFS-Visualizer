@@ -1,10 +1,18 @@
-#ifndef CLUSTER_PROC_HPP
-#define CLUSTER_PROC_HPP
+#ifndef CLUSTER_PROC_H
+#define CLUSTER_PROC_H
 
 #include <memory>
+#include <pybind11/pybind11.h>
 #include "data_structures.h"
-#include "../core/imageReader/Reader.h"
+#include "read.h"
+#include "image.h"
 
-bootSector readBootSector(const std::unique_ptr<Reader>&);
+namespace py = pybind11;
+
+bool read_boot_sector(const std::unique_ptr<Reader>&);
+py::dict boot_sector_dict();
+std::string boot_sector_hex();
+
+extern std::unique_ptr<Reader> global_reader;
 
 #endif

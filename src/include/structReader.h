@@ -1,6 +1,6 @@
 #pragma once
-#include "../imageReader/Reader.h"
-#include "../../include/data_structures.h"
+#include "read.h"
+#include "data_structures.h"
 #include <type_traits>
 #include <memory>
 #include <iostream>
@@ -28,24 +28,5 @@ public:
 
         return true;
     }
-
-    // Prints the structure in hexadecimal format
-    template<typename T>
-    static bool readAndPrint(T& struct_obj, Reader* reader) {
-        int64_t initialPos = reader->tell();
-        
-        if (!read(struct_obj, reader)) {
-            return false;
-        }
-
-        std::cout << "Estructura leída en offset 0x" 
-                 << std::hex << initialPos << std::dec << ":\n";
-        
-        HexPrinter::print(reinterpret_cast<uint8_t*>(&struct_obj), 
-                         sizeof(T), 
-                         initialPos);
-        
-        return true;
-    }    
 
 };

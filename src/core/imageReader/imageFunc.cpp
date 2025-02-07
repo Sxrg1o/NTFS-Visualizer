@@ -1,56 +1,49 @@
 #include "../../include/imageFunc.h"
-#include "ReaderFactory.h"
+#include "../../include/read.h"
 #include "../../include/image.h"
 #include "../../include/data_structures.h"
-#include "../ntfs/clusterProc.cpp"
 #include <iostream>
 #include <iomanip>
 #include <cstring>
 
 std::unique_ptr<Reader> global_reader;
 
-py::dict readImage(const std::string& filePath) {
+bool is_ntfs() {
+    if (!global_reader) {
+        std::cerr << "No se ha abierto un archivo/partición" << std::endl;
+        return false;
+    }
+
+    global_reader->seek(3);
+    uint64_t oem_name;
+    global_reader->read(reinterpret_cast<uint8_t*>(&oem_name), 8);
+    global_reader->seek(0); // Reset
+
+    if(oem_name != FS_MAGIC) {
+        std::cerr << "Not an NTFS image" << std::endl;
+        global_reader->close();
+        return false;
+    } else {
+        std::cout << "Found NTFS image" << std::endl;
+        return true;
+    }
+}
+
+bool read_image(const std::string& filePath) {
     global_reader = ReaderFactory::createReader(false);
     if (!global_reader->open(filePath)) {
         std::cerr << "Error opening file/partition" << std::endl;
-        return py::dict();
+        return false;
     }
 
-    bootSector bs = readBootSector(global_reader);
-    if(bs.oem_name != FS_MAGIC) {
-        std::cerr << "Not an NTFS image" << std::endl;
-        global_reader->close();
-        return py::dict();
-    } else {
-        std::cout << "Found NTFS image" << std::endl;
+    if(!is_ntfs()) {
+        return false;
     }
 
-    py::dict result;
-    
-    // Convert jump instruction to hex string
-    std::stringstream ss;
-    ss << std::hex << std::uppercase;
-    for(int i = 0; i < 3; i++) {
-        ss << std::setw(2) << std::setfill('0') << static_cast<int>(bs.jump_instruction[i]) << " ";
-    }
-    
-    result["jump_instruction"] = ss.str();
-    result["oem_name"] = std::string(reinterpret_cast<char*>(&bs.oem_name), 8);
-    result["bytes_x_sector"] = bs.bytes_x_sector;
-    result["sectors_x_cluster"] = static_cast<int>(bs.sectors_x_cluster);
-    result["reserved_sectors"] = bs.reserved_sectors;
-    result["media_descriptor"] = static_cast<std::string>(std::to_string(bs.media_descriptor));
-    result["sectors_x_volume"] = bs.sectors_x_volume;
-    result["cluster_MFT_start"] = bs.cluster_MFT_start;
-    result["cluster_MFTMirr_start"] = bs.cluster_MFTMirr_start;
-    result["entry_size"] = static_cast<int>(bs.entry_size);
-    result["index_size"] = static_cast<int>(bs.index_size);
-    result["serial_number"] = bs.serial_number;
-
-    return result;
+    return true;
 }
 
-void closeImage() {
+void close_image() {
     if (global_reader) {
         global_reader->close();
     }

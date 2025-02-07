@@ -17,7 +17,7 @@ class MainWindow(QMainWindow):
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
 
-        self.generate_screen = Tabs()
+        self.tabs = Tabs()
 
         self.welcome_screen = QMainWindow()
         self.ui = Ui_MainWindow()
@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
         self.ui.main_window = self
         
         self.stacked_widget.addWidget(self.welcome_screen)
-        self.stacked_widget.addWidget(self.generate_screen)
+        self.stacked_widget.addWidget(self.tabs)
         
         self.menu_bar = MenuBar(self)
         self.menu_bar.connect_dark_theme()
@@ -35,10 +35,10 @@ class MainWindow(QMainWindow):
         self.menu_bar.toggle_theme(self.current_theme)
         self.load_theme(self.current_theme)
         
-        self.ui.pushButton_2.clicked.connect(self.go_to_generate_screen)
+        self.ui.pushButton_2.clicked.connect(self.go_to_tabs)
 
-    def go_to_generate_screen(self):
-        self.stacked_widget.setCurrentWidget(self.generate_screen)
+    def go_to_tabs(self):
+        self.stacked_widget.setCurrentWidget(self.tabs)
 
     def load_theme(self, theme):
         self.current_theme = theme
