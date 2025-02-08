@@ -5,6 +5,7 @@
 #include "../../include/clusterProc.h"
 #include "../../include/HexPrinter.h"
 #include "../../include/entryProc.h"
+#include "../../include/attrProc.h"
 #include <vector>
 
 ntfsImage image = {};
@@ -72,7 +73,7 @@ ClusterStatus analyze_clusters() {
     // Read $Bitmap structure
     mftEntry bitmap_entry = read_mft_entry(global_reader, 6);
     // Now we read $DATA from the bitmap
-    // Need to add function to read data from an attribute (attrProc.cpp)
+    dataAttr bitmap_data = read_data_attribute(global_reader, &bitmap_entry.attrs[0], MDF_BITMAP);
 
 
     return status;

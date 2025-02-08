@@ -1,5 +1,6 @@
 #ifndef IMAGE_H
 #define IMAGE_H
+#include <cstdint>
 
 typedef struct {
     uint16_t bytes_x_sector;

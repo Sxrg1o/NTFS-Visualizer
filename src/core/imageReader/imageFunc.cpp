@@ -10,7 +10,7 @@ std::unique_ptr<Reader> global_reader;
 
 bool is_ntfs() {
     if (!global_reader) {
-        std::cerr << "No se ha abierto un archivo/partición" << std::endl;
+        std::cerr << "Error not opened file/partition" << std::endl;
         return false;
     }
 

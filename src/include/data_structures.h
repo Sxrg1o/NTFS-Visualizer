@@ -96,6 +96,7 @@ typedef struct {
     uint64_t init_size;
 } non_residentData;
 
+#pragma pack(push, 1)
 typedef struct {
 	uint32_t type;
     uint32_t length;
@@ -105,6 +106,7 @@ typedef struct {
     uint16_t flags;
     uint16_t attr_id;
 } mftAttrHeader;
+#pragma pack(pop)
 
 // Flags
 #define ATTR_RESIDENT 0x00
@@ -115,6 +117,24 @@ typedef struct {
 #define ATTR_SPARSE 0x8000
 
 #define END_OF_ENTRY 0xFFFFFFFF 
+
+// Basic MFT Attributes
+
+#define ATTR_STDINF               0x10  
+#define ATTR_FILENAME             0x30  
+#define ATTR_OBJECTID             0x40  
+#define ATTR_SECURITY_DESC        0x50 
+#define ATTR_VOLUME_NAME          0x60 
+#define ATTR_VOLUME_INFO          0x70 
+#define ATTR_DATA                 0x80 
+#define ATTR_INDEX_ROOT           0x90 
+#define ATTR_INDEX_ALLOCATION     0xA0 
+#define ATTR_BITMAP               0xB0 
+#define ATTR_REPARSE_POINT        0xC0 
+#define ATTR_EA_INFORMATION       0xD0  // Extended attributes information
+#define ATTR_EA                   0xE0  // Extended attributes
+#define ATTR_PROPERTY_SET         0xF0  
+#define ATTR_LOGGED_UTILITY_STREAM 0x100 
 
 /* Index data structures */
 

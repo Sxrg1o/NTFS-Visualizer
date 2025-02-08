@@ -19,7 +19,7 @@ struct ClusterStatus {
 };
 
 bool read_boot_sector(const std::unique_ptr<Reader>&);
-py::dict boot_sector_dict();
+//py::dict boot_sector_dict();
 std::string boot_sector_hex();
 
 extern std::unique_ptr<Reader> global_reader;
