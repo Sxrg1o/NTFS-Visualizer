@@ -37,7 +37,7 @@ dataAttr read_data_attribute(const std::unique_ptr<Reader>& reader, mftAttr* att
     if (result.is_resident) {   // Handle resident attribute
         const auto& res_data = attr->content.resident_attr;
         result.logical_size = res_data.size;
-        reader->seek(image.cluster_MFT_start + entry_number * image.entry_size + res_data.offset, false);
+        reader->seek(attr->offset + res_data.offset, false);
         result.data.resize(res_data.size);
         reader->read(result.data.data(), res_data.size);
     } else {                   // Handle non-resident attribute   
@@ -48,7 +48,7 @@ dataAttr read_data_attribute(const std::unique_ptr<Reader>& reader, mftAttr* att
             result.data.reserve(non_res_data.alloc_size);
         }
 
-        reader->seek(image.cluster_MFT_start + entry_number * image.entry_size + non_res_data.offset, false);
+        reader->seek(attr->offset + non_res_data.offset, false);
 
         uint64_t absolute_cluster_offset = 0;
         uint64_t total_clusters = (non_res_data.VCN_end - non_res_data.VCN_start + 1);

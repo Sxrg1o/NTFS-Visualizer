@@ -1,14 +1,14 @@
 #ifndef ATTR_PROC_H
 #define ATTR_PROC_H
 
-#include <pybind11/pybind11.h>
+//#include <pybind11/pybind11.h>
 #include "data_structures.h"
 #include "read.h"
 #include "image.h"
 #include "entryProc.h"
 #include "clusterProc.h"
 
-namespace py = pybind11;
+//namespace py = pybind11;
 
 typedef struct {
     int64_t cluster_offset;

@@ -2,12 +2,12 @@
 #define CLUSTER_PROC_H
 
 #include <memory>
-#include <pybind11/pybind11.h>
+//#include <pybind11/pybind11.h>
 #include "data_structures.h"
 #include "read.h"
 #include "image.h"
 
-namespace py = pybind11;
+//namespace py = pybind11;
 
 struct ClusterStatus {
     enum Type {

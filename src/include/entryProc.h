@@ -10,6 +10,7 @@
 
 typedef struct {
     mftAttrHeader header;
+    uint64_t offset;        
     union {
         residentData resident_attr;
         non_residentData non_resident_attr;

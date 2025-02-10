@@ -30,7 +30,7 @@ bool read_boot_sector(const std::unique_ptr<Reader>& reader) {
     return true;
 }
 
-py::dict boot_sector_dict() {
+/*py::dict boot_sector_dict() {
     py::dict result;
     bool isValid = read_boot_sector(global_reader);
     if(!isValid) {
@@ -57,7 +57,7 @@ py::dict boot_sector_dict() {
     result["serial_number"] = bs.serial_number;
 
     return result;
-}
+}*/
 
 std::string boot_sector_hex() {
     std::stringstream ss;

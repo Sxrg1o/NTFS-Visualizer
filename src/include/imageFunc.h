@@ -3,11 +3,11 @@
 
 #include <string>
 #include <memory>
-#include <pybind11/pybind11.h>
+//#include <pybind11/pybind11.h>
 
 class Reader;
 
-namespace py = pybind11;
+//namespace py = pybind11;
 
 bool read_image(const std::string& filePath);
 void close_image();
