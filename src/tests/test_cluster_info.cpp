@@ -18,7 +18,7 @@ void print_data_attribute(uint64_t entry_number) {
     }
 
     mftEntry entry = read_mft_entry(global_reader, entry_number);
-    mftAttr* data_attr = find_attribute(entry, ATTR_BITMAP);  // Just for testing
+    mftAttr* data_attr = find_attribute(entry, ATTR_FILENAME);  // Just for testing
     if (!data_attr) {
         std::cerr << "No attribute found in entry " << entry_number << std::endl;
         return;
@@ -27,7 +27,7 @@ void print_data_attribute(uint64_t entry_number) {
     dataAttr data = read_data_attribute(global_reader, data_attr, entry_number);
 
     std::cout << "Entry number: " << entry_number << std::endl;
-    std::cout << "Attribute type: $BITMAP" << std::endl;      // Just for testing
+    std::cout << "Attribute type: $FILE_NAME" << std::endl;      // Just for testing
     std::cout << "Resident: " << (data.is_resident ? "Yes" : "No") << std::endl;
     std::cout << "Logical size: " << data.logical_size << " bytes" << std::endl;
     std::cout << "Data size: " << data.data.size() << " bytes" << std::endl;

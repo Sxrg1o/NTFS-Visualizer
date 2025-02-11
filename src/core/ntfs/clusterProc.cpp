@@ -74,7 +74,7 @@ ClusterStatus analyze_clusters() {
     mftEntry bitmap_entry = read_mft_entry(global_reader, 6);
     // Now we read $DATA from the bitmap
     dataAttr bitmap_data = read_data_attribute(global_reader, &bitmap_entry.attrs[0], MDF_BITMAP);
-
+    
 
     return status;
 }
