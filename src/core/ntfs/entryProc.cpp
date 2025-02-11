@@ -35,8 +35,6 @@ mftEntry read_mft_entry(const std::unique_ptr<Reader>& reader, uint64_t number) 
     mftEntryHeader header;
     // Offset used for attribute reading
     uint64_t offset = image.cluster_MFT_start * image.bytes_x_sector * image.sectors_x_cluster + number * 1024;
-    printf("Entry size: %x\n", image.entry_size);
-    printf("MFT Entry start: %x\n", image.cluster_MFT_start);
     reader->seek(offset, false);
     if (!StructReader::read(header, reader.get())) {
         std::cerr << "Error reading file/partition" << std::endl; 
@@ -45,12 +43,6 @@ mftEntry read_mft_entry(const std::unique_ptr<Reader>& reader, uint64_t number) 
     entry.header = header;
     reader->seek(offset + header.first_attr_off, false); 
     offset += header.first_attr_off;
-    
-    printf("Entry header:\n");
-    printf("Signature: %u\n", header.signature);
-    printf("Link count: %u\n", header.link_count);
-    printf("Attr offset: %u\n", header.first_attr_off);
-    printf("Flags: %u\n", header.flags);
 
     while(true) {
         mftAttr attr = read_attribute(reader);

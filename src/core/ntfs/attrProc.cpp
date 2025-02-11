@@ -21,7 +21,7 @@ uint64_t read_var_length_number(const uint8_t* data, uint8_t size) {
     return result;
 }
 
-mftAttr* find_attribute(mftEntry &entry, uint32_t type) {
+mftAttr* find_attribute(mftEntry &entry, uint32_t type) {       // Add support to alternate data streams
     for(auto &attr : entry.attrs) {
         if(attr.header.type == type) {
             return &attr;
@@ -32,7 +32,7 @@ mftAttr* find_attribute(mftEntry &entry, uint32_t type) {
 
 dataAttr read_data_attribute(const std::unique_ptr<Reader>& reader, mftAttr* attr, uint64_t entry_number) {
     dataAttr result;
-    uint64_t entry_offset = image.cluster_MFT_start * image.bytes_x_sector * image.sectors_x_cluster + entry_number * image.entry_size;
+    uint64_t entry_offset = image.cluster_MFT_start * image.bytes_x_sector * image.sectors_x_cluster + entry_number * 1024;
     result.is_resident = attr->header.resident_flag == ATTR_RESIDENT;
 
     if (result.is_resident) {   // Handle resident attribute
@@ -58,7 +58,7 @@ dataAttr read_data_attribute(const std::unique_ptr<Reader>& reader, mftAttr* att
 
         while (clusters_read < total_clusters) {
             uint8_t header;
-            reader->read(&header, 1);
+            reader->read(&header, sizeof(uint8_t));
 
             if (header == 0) break;
 
@@ -82,7 +82,7 @@ dataAttr read_data_attribute(const std::unique_ptr<Reader>& reader, mftAttr* att
                 int64_t relative_offset = read_var_length_number(offset_bytes.data(), offset_length);
                 absolute_cluster_offset += relative_offset;
                 run.cluster_offset = absolute_cluster_offset;
-                run.is_sparse = (relative_offset == 0);
+                run.is_sparse = false;          // Add support for sparse data (get attribute $STD_INFO sparse flag and check if it's set)
             } else {
                 run.cluster_offset = 0;
                 run.is_sparse = true;
@@ -106,6 +106,7 @@ dataAttr read_data_attribute(const std::unique_ptr<Reader>& reader, mftAttr* att
             /** For sparse (filled with zeros) runs, the resize already filled with zeros **/ 
 
             clusters_read += run.cluster_count;
+            run_list_pos = reader->tell();
         }
 
         if (result.data.size() > non_res_data.actual_size) {
