@@ -24,7 +24,7 @@ typedef struct {
 } dataAttr;
 
 uint64_t read_var_length_number(const uint8_t*, uint8_t);
-mftAttr* find_attribute(mftEntry &, uint32_t);
+mftAttr* find_attribute(mftEntry &, uint32_t, uint32_t);
 dataAttr read_data_attribute(const std::unique_ptr<Reader>&, mftAttr*, uint64_t);
 
 extern std::unique_ptr<Reader> global_reader;

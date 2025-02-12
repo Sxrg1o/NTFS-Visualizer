@@ -21,12 +21,25 @@ uint64_t read_var_length_number(const uint8_t* data, uint8_t size) {
     return result;
 }
 
-mftAttr* find_attribute(mftEntry &entry, uint32_t type) {       // Add support to alternate data streams
-    for(auto &attr : entry.attrs) {
-        if(attr.header.type == type) {
-            return &attr;
+mftAttr* find_attribute(mftEntry &entry, uint32_t type, uint32_t data_stream) {      
+    if (data_stream == 0) {
+        for (auto &attr : entry.attrs) {
+            if (attr.header.type == type) {
+                return &attr;
+            }
+        }
+        return nullptr;
+    }
+    uint32_t stream_count = 1;
+    for (auto &attr : entry.attrs) {
+        if (attr.header.type == type) {
+            if (stream_count == data_stream) {
+                return &attr;
+            }
+            stream_count++;
         }
     }
+    
     return nullptr;
 }
 

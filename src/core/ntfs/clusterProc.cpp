@@ -67,15 +67,46 @@ std::string boot_sector_hex() {
 
 /*****  Reading cluster info  *****/
 
-ClusterStatus analyze_clusters() {
+ClusterStatus analyze_clusters(uint64_t chunk) {
     ClusterStatus status;
     uint64_t total_clusters = image.sectors_x_volume / image.sectors_x_cluster;
-    // Read $Bitmap structure
-    mftEntry bitmap_entry = read_mft_entry(global_reader, 6);
-    // Now we read $DATA from the bitmap
-    dataAttr bitmap_data = read_data_attribute(global_reader, &bitmap_entry.attrs[0], MDF_BITMAP);
+    uint64_t clusters_x_chunk = 200;
+    uint64_t max_chunks = total_clusters / clusters_x_chunk;
+
+    if(chunk > max_chunks) {
+        chunk = max_chunks-1;
+    }
+
     
 
+    uint64_t start_cluster = chunk * clusters_x_chunk;
+    uint64_t end_cluster = std::min(start_cluster + clusters_x_chunk, total_clusters);
+    uint64_t clusters_this_chunk = end_cluster - start_cluster;
+    
+    // Read $Bitmap structure
+    mftEntry bitmap_entry = read_mft_entry(global_reader, MDF_BITMAP);
+    // Now we read $DATA from the bitmap
+    mftAttr *data_attr = find_attribute(bitmap_entry, ATTR_DATA, 0);
+    dataAttr bitmap_data = read_data_attribute(global_reader, data_attr, MDF_BITMAP);
+
+    status.clusters.resize(clusters_this_chunk);
+
+    for(uint64_t i = 0; i < clusters_this_chunk; i++) {
+        uint64_t current_cluster = start_cluster + i;
+        uint64_t byte_pos = current_cluster / 8;
+        uint8_t bit_pos = current_cluster % 8;
+        
+        bool is_allocated = (bitmap_data.data[byte_pos] & (1 << bit_pos)) != 0;
+        status.clusters[i] = is_allocated ? ClusterStatus::USED : ClusterStatus::FREE;
+    }
+
+    // Read $BadClus structure 
+
+    /* Some entries are really big, so
+        TODO:
+            - Don't store data in struct, just read when needed
+            - Use a defined buffer size for reading attributes (non-resident) */
+    
     return status;
 }
 

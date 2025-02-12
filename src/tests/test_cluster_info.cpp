@@ -8,6 +8,7 @@
 #include "../include/attrProc.h"
 #include "../include/HexPrinter.h"
 #include "../include/imageFunc.h"
+#include "../include/clusterProc.h"
 
 /** Comentar líneas referentes a pybind para compilar **/
 
@@ -18,7 +19,7 @@ void print_data_attribute(uint64_t entry_number) {
     }
 
     mftEntry entry = read_mft_entry(global_reader, entry_number);
-    mftAttr* data_attr = find_attribute(entry, ATTR_DATA);  // Just for testing
+    mftAttr* data_attr = find_attribute(entry, ATTR_DATA, 0);  // Just for testing
     if (!data_attr) {
         std::cerr << "No attribute found in entry " << entry_number << std::endl;
         return;
@@ -32,13 +33,13 @@ void print_data_attribute(uint64_t entry_number) {
     std::cout << "Logical size: " << data.logical_size << " bytes" << std::endl;
     std::cout << "Data size: " << data.data.size() << " bytes" << std::endl;
 
-    std::cout << "\nData content (hex):\n";
+    /*std::cout << "\nData content (hex):\n";
     for (size_t i = 0; i < data.data.size(); ++i) {
         if (i > 0 && i % 16 == 0) std::cout << std::endl;
         std::cout << std::hex << std::setw(2) << std::setfill('0') 
                   << static_cast<int>(data.data[i]) << " ";
     }
-    std::cout << std::dec << std::endl;
+    std::cout << std::dec << std::endl;*/
 
     if (!data.is_resident && !data.runs.empty()) {
         std::cout << "\nRun list information:\n";
@@ -50,6 +51,17 @@ void print_data_attribute(uint64_t entry_number) {
                       << ", Sparse: " << (run.is_sparse ? "Yes" : "No") << std::endl;
         }
     }
+
+    /*ClusterStatus status = analyze_clusters(0);
+    std::cout << "Cluster status:\n";
+    int i = 0;
+    for(auto &cluster : status.clusters) {
+        if(i % 20 == 0 && i != 0) std::cout << std::endl;
+        std::cout << cluster << " ";
+        i++;
+    }
+    std::cout << std::endl;*/
+
 }
 
 int main(int argc, char* argv[]) {

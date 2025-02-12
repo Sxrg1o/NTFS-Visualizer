@@ -11,8 +11,8 @@
 
 struct ClusterStatus {
     enum Type {
-        USED = 0,
-        FREE = 1,
+        FREE = 0,
+        USED = 1,
         BAD = 2
     };
     std::vector<Type> clusters;
@@ -21,6 +21,7 @@ struct ClusterStatus {
 bool read_boot_sector(const std::unique_ptr<Reader>&);
 //py::dict boot_sector_dict();
 std::string boot_sector_hex();
+ClusterStatus analyze_clusters(uint64_t);
 
 extern std::unique_ptr<Reader> global_reader;
 

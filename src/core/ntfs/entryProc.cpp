@@ -53,7 +53,7 @@ mftEntry read_mft_entry(const std::unique_ptr<Reader>& reader, uint64_t number) 
         entry.attrs.push_back(attr);
         offset += attr.header.length;
     }
-    /* Print attributes 
+    //Print attributes 
     for(auto &attr : entry.attrs) {
         printf("Type: %u\n", attr.header.type);
         printf("Length: %u\n", attr.header.length);
@@ -62,7 +62,7 @@ mftEntry read_mft_entry(const std::unique_ptr<Reader>& reader, uint64_t number) 
         printf("Name offset: %u\n", attr.header.name_off);
         printf("Flags: %u\n", attr.header.flags);
         printf("Attr ID: %u\n", attr.header.attr_id);
-    }*/
+    }
 
     return entry;
 }
