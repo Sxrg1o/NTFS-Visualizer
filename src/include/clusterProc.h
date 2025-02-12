@@ -18,6 +18,8 @@ struct ClusterStatus {
     std::vector<Type> clusters;
 };
 
+#define CLUSTERS_X_CHUNK 200
+
 bool read_boot_sector(const std::unique_ptr<Reader>&);
 //py::dict boot_sector_dict();
 std::string boot_sector_hex();

@@ -17,8 +17,8 @@ typedef struct {
 } dataRun;
 
 typedef struct {
-    std::vector<uint8_t> data;
     bool is_resident;
+    uint64_t resident_offset;
     uint64_t logical_size;
     std::vector<dataRun> runs;
 } dataAttr;
@@ -26,6 +26,7 @@ typedef struct {
 uint64_t read_var_length_number(const uint8_t*, uint8_t);
 mftAttr* find_attribute(mftEntry &, uint32_t, uint32_t);
 dataAttr read_data_attribute(const std::unique_ptr<Reader>&, mftAttr*, uint64_t);
+std::vector<uint8_t> read_data_portion(const std::unique_ptr<Reader>&, const dataAttr&, uint64_t, uint64_t, uint64_t);
 
 extern std::unique_ptr<Reader> global_reader;
 extern ntfsImage image;

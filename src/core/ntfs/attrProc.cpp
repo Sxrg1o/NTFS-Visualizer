@@ -48,84 +48,105 @@ dataAttr read_data_attribute(const std::unique_ptr<Reader>& reader, mftAttr* att
     uint64_t entry_offset = image.cluster_MFT_start * image.bytes_x_sector * image.sectors_x_cluster + entry_number * 1024;
     result.is_resident = attr->header.resident_flag == ATTR_RESIDENT;
 
-    if (result.is_resident) {   // Handle resident attribute
+    if (result.is_resident) {
         const auto& res_data = attr->content.resident_attr;
         result.logical_size = res_data.size;
-        reader->seek(entry_offset + attr->offset + res_data.offset, false);
-        result.data.resize(res_data.size);
-        reader->read(result.data.data(), res_data.size);
-    } else {                   // Handle non-resident attribute   
+        result.resident_offset = attr->offset + res_data.offset;
+    } else {
         const auto& non_res_data = attr->content.non_resident_attr;
         result.logical_size = non_res_data.actual_size;
         
-        if (non_res_data.alloc_size > 0) {
-            result.data.reserve(non_res_data.alloc_size);
-        }
-
         reader->seek(entry_offset + attr->offset + non_res_data.offset, false);
-
+        
         uint64_t absolute_cluster_offset = 0;
         uint64_t total_clusters = (non_res_data.VCN_end - non_res_data.VCN_start + 1);
         uint64_t clusters_read = 0;
-        uint64_t run_list_pos = reader->tell();  
 
         while (clusters_read < total_clusters) {
             uint8_t header;
             reader->read(&header, sizeof(uint8_t));
-
+            
             if (header == 0) break;
 
             uint8_t offset_length = (header & 0xF0) >> 4;
             uint8_t length_length = header & 0x0F;
 
             dataRun run;
-
+            
             std::vector<uint8_t> length_bytes(length_length);
             reader->read(length_bytes.data(), length_length);
             run.cluster_count = read_var_length_number(length_bytes.data(), length_length);
 
-            if (clusters_read + run.cluster_count > total_clusters) {   // Adjust count if needed
+            if (clusters_read + run.cluster_count > total_clusters) {
                 run.cluster_count = total_clusters - clusters_read;
             }
 
-            // Read offset if it exists
             if (offset_length > 0) {
                 std::vector<uint8_t> offset_bytes(offset_length);
                 reader->read(offset_bytes.data(), offset_length);
                 int64_t relative_offset = read_var_length_number(offset_bytes.data(), offset_length);
                 absolute_cluster_offset += relative_offset;
                 run.cluster_offset = absolute_cluster_offset;
-                run.is_sparse = false;          // Add support for sparse data (get attribute $STD_INFO sparse flag and check if it's set)
+                run.is_sparse = false;      
             } else {
                 run.cluster_offset = 0;
                 run.is_sparse = true;
             }
 
             result.runs.push_back(run);
-
-            uint64_t run_size = run.cluster_count * image.bytes_x_sector * image.sectors_x_cluster;
-            uint64_t current_pos = result.data.size();
-            result.data.resize(current_pos + run_size);
-
-            if (!run.is_sparse) {
-                uint64_t base_offset = run.cluster_offset * image.bytes_x_sector * image.sectors_x_cluster;
-                uint64_t return_pos = reader->tell();
-                
-                reader->seek(base_offset, false);
-                reader->read(result.data.data() + current_pos, run_size);
-                
-                reader->seek(return_pos, false);    // Return to run list
-            }
-            /** For sparse (filled with zeros) runs, the resize already filled with zeros **/ 
-
             clusters_read += run.cluster_count;
-            run_list_pos = reader->tell();
-        }
-
-        if (result.data.size() > non_res_data.actual_size) {
-            result.data.resize(non_res_data.actual_size);
         }
     }
 
+    return result;
+}
+
+std::vector<uint8_t> read_data_portion(const std::unique_ptr<Reader>& reader, const dataAttr& attr, uint64_t chunk, uint64_t size, uint64_t entry_number) {
+    std::vector<uint8_t> result;
+    uint64_t offset = chunk * 200;
+    
+    uint64_t max_chunks = (attr.logical_size + size - 1) / size;
+    if (chunk >= max_chunks) {
+        chunk = max_chunks - 1;
+    }
+    
+    result.resize(size);
+    uint64_t entry_offset = image.cluster_MFT_start * image.bytes_x_sector * image.sectors_x_cluster + entry_number * 1024;
+    
+    if (attr.is_resident) {
+        reader->seek(entry_offset + attr.resident_offset + offset, false);
+        reader->read(result.data(), size);
+    } else {
+        uint64_t bytes_per_cluster = image.bytes_x_sector * image.sectors_x_cluster;
+        uint64_t start_cluster = offset / bytes_per_cluster;
+        uint64_t end_cluster = (offset + size + bytes_per_cluster - 1) / bytes_per_cluster;
+        
+        uint64_t current_cluster = 0;
+        uint64_t bytes_read = 0;
+        
+        for (const auto& run : attr.runs) {
+            if (current_cluster + run.cluster_count > start_cluster) {
+                uint64_t cluster_offset = start_cluster - current_cluster;
+                uint64_t run_offset = cluster_offset * bytes_per_cluster;
+                uint64_t data_offset = offset - (start_cluster * bytes_per_cluster);
+                
+                uint64_t available_bytes = run.cluster_count * bytes_per_cluster - run_offset;
+                uint64_t bytes_to_read = std::min(size - bytes_read, available_bytes);
+                
+                if (!run.is_sparse) {
+                    uint64_t base_offset = run.cluster_offset * bytes_per_cluster + run_offset;
+                    reader->seek(base_offset + data_offset, false);
+                    reader->read(result.data() + bytes_read, bytes_to_read);
+                } else {
+                    std::fill_n(result.data() + bytes_read, bytes_to_read, 0);
+                }
+                
+                bytes_read += bytes_to_read;
+                if (bytes_read >= size) break;
+            }
+            current_cluster += run.cluster_count;
+        }
+    }
+    
     return result;
 }

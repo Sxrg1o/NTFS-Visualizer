@@ -18,8 +18,8 @@ void print_data_attribute(uint64_t entry_number) {
         return;
     }
 
-    mftEntry entry = read_mft_entry(global_reader, entry_number);
-    mftAttr* data_attr = find_attribute(entry, ATTR_DATA, 0);  // Just for testing
+    /*mftEntry entry = read_mft_entry(global_reader, entry_number);
+    mftAttr* data_attr = find_attribute(entry, ATTR_DATA, 2);  // Just for testing
     if (!data_attr) {
         std::cerr << "No attribute found in entry " << entry_number << std::endl;
         return;
@@ -31,15 +31,15 @@ void print_data_attribute(uint64_t entry_number) {
     std::cout << "Attribute type: $DATA" << std::endl;      // Just for testing
     std::cout << "Resident: " << (data.is_resident ? "Yes" : "No") << std::endl;
     std::cout << "Logical size: " << data.logical_size << " bytes" << std::endl;
-    std::cout << "Data size: " << data.data.size() << " bytes" << std::endl;
 
-    /*std::cout << "\nData content (hex):\n";
-    for (size_t i = 0; i < data.data.size(); ++i) {
+    std::vector<uint8_t> data_portion = read_data_portion(global_reader, data, 0, 200, entry_number);
+    std::cout << "\nData content (hex):\n";
+    for (size_t i = 0; i < data_portion.size(); ++i) {
         if (i > 0 && i % 16 == 0) std::cout << std::endl;
         std::cout << std::hex << std::setw(2) << std::setfill('0') 
-                  << static_cast<int>(data.data[i]) << " ";
+                  << static_cast<int>(data_portion[i]) << " ";
     }
-    std::cout << std::dec << std::endl;*/
+    std::cout << std::dec << std::endl;
 
     if (!data.is_resident && !data.runs.empty()) {
         std::cout << "\nRun list information:\n";
@@ -47,12 +47,18 @@ void print_data_attribute(uint64_t entry_number) {
             std::cout << "VCN Start/End: " << data_attr->content.non_resident_attr.VCN_start << "/" << data_attr->content.non_resident_attr.VCN_end << std::endl;
             std::cout << "Non-resident data offset: " << data_attr->content.non_resident_attr.offset << std::endl;
             std::cout << " Cluster count: " << run.cluster_count 
-                      << ", Offset: " << run.cluster_offset 
-                      << ", Sparse: " << (run.is_sparse ? "Yes" : "No") << std::endl;
+                      << ", Offset: " << run.cluster_offset << std::endl;
+            uint64_t start_cluster = run.cluster_offset / image.bytes_x_sector / image.sectors_x_cluster;
+            std::cout << " Clusters: ";
+            for(int i = 0; i < run.cluster_count; i++) {
+                std::cout << start_cluster << " ";
+                start_cluster++;
+            }
+            std::cout << ", Sparse: " << (run.is_sparse ? "Yes" : "No") << std::endl;
         }
-    }
+    }*/
 
-    /*ClusterStatus status = analyze_clusters(0);
+    ClusterStatus status = analyze_clusters(0);
     std::cout << "Cluster status:\n";
     int i = 0;
     for(auto &cluster : status.clusters) {
@@ -60,8 +66,7 @@ void print_data_attribute(uint64_t entry_number) {
         std::cout << cluster << " ";
         i++;
     }
-    std::cout << std::endl;*/
-
+    std::cout << std::endl;
 }
 
 int main(int argc, char* argv[]) {
