@@ -62,11 +62,16 @@ void print_data_attribute(uint64_t entry_number) {
     std::cout << "Cluster status:\n";
     int i = 0;
     for(auto &cluster : status.clusters) {
-        if(i % 20 == 0 && i != 0) std::cout << std::endl;
+        if(i % 16 == 0 && i != 0) std::cout << std::endl;
         std::cout << cluster << " ";
         i++;
     }
     std::cout << std::endl;
+
+    std::string cluster_raw = get_cluster_raw(global_reader, 0);
+    std::cout << "Raw cluster data:\n";
+    std::cout << cluster_raw << std::endl;
+//xd
 }
 
 int main(int argc, char* argv[]) {

@@ -13,6 +13,7 @@ bootSector bs = {};
 
 /*****  Reading the boot sector   *****/
 
+// Reads the boot sector and stores some information in the global image struct
 bool read_boot_sector(const std::unique_ptr<Reader>& reader) {
     reader->seek(0, false);    // Boot sector always at offset 0
     if (!StructReader::read(bs, reader.get())) {
@@ -66,6 +67,7 @@ std::string boot_sector_hex() {
 
 /*****  Reading cluster info  *****/
 
+// Analyzes the clusters in the specified chunk and returns a ClusterStatus struct 
 ClusterStatus analyze_clusters(uint64_t chunk) {
     ClusterStatus status;
     uint64_t total_clusters = image.sectors_x_volume / image.sectors_x_cluster;
@@ -134,9 +136,23 @@ ClusterStatus analyze_clusters(uint64_t chunk) {
                 }
             }
         }
-        
         absolute_cluster += run.cluster_count;
     }
 
     return status;
+}
+
+// Goes to cluster and gets raw data 
+std::string get_cluster_raw(std::unique_ptr<Reader>& reader, uint64_t cluster) {
+    uint64_t size = image.bytes_x_sector * image.sectors_x_cluster;
+    uint64_t offset = cluster * size;
+    std::vector<uint8_t> data;
+
+    reader->seek(offset, false);
+    data.resize(size);
+    reader->read(data.data(), size);
+    
+    std::stringstream ss;
+    HexPrinter::print(data, ss);
+    return ss.str();
 }

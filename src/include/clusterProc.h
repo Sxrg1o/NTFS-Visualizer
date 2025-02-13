@@ -18,12 +18,13 @@ struct ClusterStatus {
     std::vector<Type> clusters;
 };
 
-#define CLUSTERS_X_CHUNK 200
+#define CLUSTERS_X_CHUNK 208
 
 bool read_boot_sector(const std::unique_ptr<Reader>&);
 //py::dict boot_sector_dict();
 std::string boot_sector_hex();
 ClusterStatus analyze_clusters(uint64_t);
+std::string get_cluster_raw(std::unique_ptr<Reader>&, uint64_t);
 
 extern std::unique_ptr<Reader> global_reader;
 
