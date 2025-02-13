@@ -156,3 +156,4 @@ std::string get_cluster_raw(std::unique_ptr<Reader>& reader, uint64_t cluster) {
     HexPrinter::print(data, ss);
     return ss.str();
 }
+

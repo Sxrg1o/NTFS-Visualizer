@@ -35,6 +35,7 @@ mftEntry read_mft_entry(const std::unique_ptr<Reader>& reader, uint64_t number) 
     mftEntryHeader header;
     // Offset used for attribute reading
     uint64_t offset = image.cluster_MFT_start * image.bytes_x_sector * image.sectors_x_cluster + number * 1024;
+    uint64_t size;
     reader->seek(offset, false);
     if (!StructReader::read(header, reader.get())) {
         std::cerr << "Error reading file/partition" << std::endl; 
@@ -43,6 +44,7 @@ mftEntry read_mft_entry(const std::unique_ptr<Reader>& reader, uint64_t number) 
     entry.header = header;
     reader->seek(offset + header.first_attr_off, false); 
     offset += header.first_attr_off;
+    size = header.first_attr_off;
 
     while(true) {
         mftAttr attr = read_attribute(reader);
@@ -52,7 +54,9 @@ mftEntry read_mft_entry(const std::unique_ptr<Reader>& reader, uint64_t number) 
         reader->seek(offset + attr.header.length, false);
         entry.attrs.push_back(attr);
         offset += attr.header.length;
+        size += attr.header.length;
     }
+    entry.free_space = 1024 - size;
     //Print attributes 
     /*for(auto &attr : entry.attrs) {
         printf("Type: %u\n", attr.header.type);
@@ -66,3 +70,15 @@ mftEntry read_mft_entry(const std::unique_ptr<Reader>& reader, uint64_t number) 
 
     return entry;
 }
+
+// Read 10 by 10 entries
+std::vector<mftEntry> read_entries(const std::unique_ptr<Reader>& reader, uint64_t start) {
+    // Check if start or start + 10 corresponds to a valid entry
+    std::vector<mftEntry> entries;
+    for(uint64_t i = start; i < 10; i++) {
+        entries.push_back(read_mft_entry(reader, i));
+    }
+}
+
+
+

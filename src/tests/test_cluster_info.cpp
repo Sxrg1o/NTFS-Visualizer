@@ -68,10 +68,10 @@ void print_data_attribute(uint64_t entry_number) {
     }
     std::cout << std::endl;
 
-    std::string cluster_raw = get_cluster_raw(global_reader, 0);
-    std::cout << "Raw cluster data:\n";
-    std::cout << cluster_raw << std::endl;
-//xd
+    //std::string cluster_raw = get_cluster_raw(global_reader, 0);
+    //std::cout << "Raw cluster data:\n";
+    //std::cout << cluster_raw << std::endl;
+
 }
 
 int main(int argc, char* argv[]) {

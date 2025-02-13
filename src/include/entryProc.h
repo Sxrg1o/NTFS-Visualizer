@@ -20,6 +20,7 @@ typedef struct {
 typedef struct {
     mftEntryHeader header;
     std::vector<mftAttr> attrs;
+    uint64_t free_space;  
 } mftEntry;
 
 mftAttr read_attribute(const std::unique_ptr<Reader>&);
