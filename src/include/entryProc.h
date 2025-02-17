@@ -21,10 +21,13 @@ typedef struct {
     mftEntryHeader header;
     std::vector<mftAttr> attrs;
     uint64_t free_space;  
+    uint64_t number;
 } mftEntry;
 
 mftAttr read_attribute(const std::unique_ptr<Reader>&);
 mftEntry read_mft_entry(const std::unique_ptr<Reader>&, uint64_t);
+std::vector<bool> get_entries_status(uint64_t, uint64_t);
+std::vector<mftEntry> read_entries(const std::unique_ptr<Reader>&, uint64_t);
 
 extern std::unique_ptr<Reader> global_reader;
 extern ntfsImage image;

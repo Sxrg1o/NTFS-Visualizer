@@ -18,8 +18,8 @@ void print_data_attribute(uint64_t entry_number) {
         return;
     }
 
-    /*mftEntry entry = read_mft_entry(global_reader, entry_number);
-    mftAttr* data_attr = find_attribute(entry, ATTR_DATA, 2);  // Just for testing
+    mftEntry entry = read_mft_entry(global_reader, entry_number);
+    mftAttr* data_attr = find_attribute(entry, ATTR_BITMAP, 0);  // Just for testing
     if (!data_attr) {
         std::cerr << "No attribute found in entry " << entry_number << std::endl;
         return;
@@ -28,7 +28,7 @@ void print_data_attribute(uint64_t entry_number) {
     dataAttr data = read_data_attribute(global_reader, data_attr, entry_number);
 
     std::cout << "Entry number: " << entry_number << std::endl;
-    std::cout << "Attribute type: $DATA" << std::endl;      // Just for testing
+    std::cout << "Attribute type: $BITMAP" << std::endl;      // Just for testing
     std::cout << "Resident: " << (data.is_resident ? "Yes" : "No") << std::endl;
     std::cout << "Logical size: " << data.logical_size << " bytes" << std::endl;
 
@@ -56,9 +56,19 @@ void print_data_attribute(uint64_t entry_number) {
             }
             std::cout << ", Sparse: " << (run.is_sparse ? "Yes" : "No") << std::endl;
         }
-    }*/
+    }
 
-    ClusterStatus status = analyze_clusters(0);
+    std::vector<mftEntry> list = read_entries(global_reader, 0);
+    for(mftEntry entry : list) {
+        std::cout << "File name: " << get_file_name(entry) << std::endl;
+        for(auto &attr : entry.attrs) {
+            std::cout << "Attribute type: " << attr.header.type << std::endl;
+            std::cout << "\tResident: " << (attr.header.resident_flag ? "Yes" : "No") << std::endl;
+        }        
+        std::cout << std::endl;
+    }
+
+    /*ClusterStatus status = analyze_clusters(0);
     std::cout << "Cluster status:\n";
     int i = 0;
     for(auto &cluster : status.clusters) {
@@ -66,7 +76,7 @@ void print_data_attribute(uint64_t entry_number) {
         std::cout << cluster << " ";
         i++;
     }
-    std::cout << std::endl;
+    std::cout << std::endl;*/
 
     //std::string cluster_raw = get_cluster_raw(global_reader, 0);
     //std::cout << "Raw cluster data:\n";

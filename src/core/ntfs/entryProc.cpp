@@ -4,6 +4,8 @@
 #include "../../include/image.h"
 #include "../../include/entryProc.h"
 #include "../../include/HexPrinter.h"
+#include "../../include/clusterProc.h"
+#include "../../include/attrProc.h"
 #include <vector>
 #include <cstdint>
 
@@ -36,6 +38,7 @@ mftEntry read_mft_entry(const std::unique_ptr<Reader>& reader, uint64_t number) 
     // Offset used for attribute reading
     uint64_t offset = image.cluster_MFT_start * image.bytes_x_sector * image.sectors_x_cluster + number * 1024;
     uint64_t size;
+    entry.number = number;
     reader->seek(offset, false);
     if (!StructReader::read(header, reader.get())) {
         std::cerr << "Error reading file/partition" << std::endl; 
@@ -71,13 +74,42 @@ mftEntry read_mft_entry(const std::unique_ptr<Reader>& reader, uint64_t number) 
     return entry;
 }
 
+// Check allocation status of MFT entries
+std::vector<bool> get_entries_status(uint64_t start, uint64_t count) {
+    mftEntry mft_entry = read_mft_entry(global_reader, 0);
+    mftAttr *bitmap_attr = find_attribute(mft_entry, ATTR_BITMAP, 0);
+    dataAttr bitmap_data = read_data_attribute(global_reader, bitmap_attr, 0);
+    
+    uint64_t start_byte = start / 8;
+    uint64_t chunk = start_byte / 200; 
+    
+    auto bitmap_chunk = read_data_portion(global_reader, bitmap_data, chunk, 200, 0);
+    
+    std::vector<bool> status;
+    uint64_t bit_offset = start % 8;
+    
+    for (uint64_t i = 0; i < count && (i + start) < bitmap_data.logical_size * 8; i++) {
+        uint64_t current_byte_idx = (i + bit_offset) / 8;
+        uint64_t current_bit = (i + bit_offset) % 8;
+        
+        if (current_byte_idx < bitmap_chunk.size()) {
+            status.push_back((bitmap_chunk[current_byte_idx] & (1 << current_bit)) != 0);
+        }
+    }
+    
+    return status;
+}
+
 // Read 10 by 10 entries
 std::vector<mftEntry> read_entries(const std::unique_ptr<Reader>& reader, uint64_t start) {
-    // Check if start or start + 10 corresponds to a valid entry
+    auto status = get_entries_status(start, 10);
     std::vector<mftEntry> entries;
-    for(uint64_t i = start; i < 10; i++) {
-        entries.push_back(read_mft_entry(reader, i));
+    for(uint64_t i = 0; i < status.size(); i++) {
+        if (status[i]) {
+            entries.push_back(read_mft_entry(reader, start + i));
+        }
     }
+    return entries;
 }
 
 

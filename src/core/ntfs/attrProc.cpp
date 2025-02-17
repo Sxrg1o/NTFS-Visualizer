@@ -109,17 +109,22 @@ std::vector<uint8_t> read_data_portion(const std::unique_ptr<Reader>& reader, co
     if (chunk >= max_chunks) {
         chunk = max_chunks - 1;
     }
+
+    uint64_t real_size = size;
+    if(offset + real_size > attr.logical_size) {
+        real_size = attr.logical_size - offset;
+    }
     
-    result.resize(size);
+    result.resize(real_size);
     uint64_t entry_offset = image.cluster_MFT_start * image.bytes_x_sector * image.sectors_x_cluster + entry_number * 1024;
     
     if (attr.is_resident) {
         reader->seek(entry_offset + attr.resident_offset + offset, false);
-        reader->read(result.data(), size);
+        reader->read(result.data(), real_size);
     } else {
         uint64_t bytes_per_cluster = image.bytes_x_sector * image.sectors_x_cluster;
         uint64_t start_cluster = offset / bytes_per_cluster;
-        uint64_t end_cluster = (offset + size + bytes_per_cluster - 1) / bytes_per_cluster;
+        uint64_t end_cluster = (offset + real_size + bytes_per_cluster - 1) / bytes_per_cluster;
         
         uint64_t current_cluster = 0;
         uint64_t bytes_read = 0;
@@ -131,7 +136,7 @@ std::vector<uint8_t> read_data_portion(const std::unique_ptr<Reader>& reader, co
                 uint64_t data_offset = offset - (start_cluster * bytes_per_cluster);
                 
                 uint64_t available_bytes = run.cluster_count * bytes_per_cluster - run_offset;
-                uint64_t bytes_to_read = std::min(size - bytes_read, available_bytes);
+                uint64_t bytes_to_read = std::min(real_size - bytes_read, available_bytes);
                 
                 if (!run.is_sparse) {
                     uint64_t base_offset = run.cluster_offset * bytes_per_cluster + run_offset;
@@ -142,11 +147,49 @@ std::vector<uint8_t> read_data_portion(const std::unique_ptr<Reader>& reader, co
                 }
                 
                 bytes_read += bytes_to_read;
-                if (bytes_read >= size) break;
+                if (bytes_read >= real_size) break;
             }
             current_cluster += run.cluster_count;
         }
     }
     
     return result;
+}
+
+std::string get_file_name(mftEntry entry) {
+    mftAttr* filename_attr = find_attribute(entry, ATTR_FILENAME, 0);
+    if (!filename_attr) {
+        return "";  
+    }
+
+    uint64_t name_offset = 0;
+    
+    if (filename_attr->header.resident_flag == ATTR_RESIDENT) {
+        name_offset = filename_attr->offset + filename_attr->content.resident_attr.offset;
+        fileName file_name_struct;
+        
+        global_reader->seek(image.cluster_MFT_start * image.bytes_x_sector * image.sectors_x_cluster + 
+                          entry.number * 1024 + name_offset, false);
+        
+        if (!StructReader::read(file_name_struct, global_reader.get())) {
+            return "";
+        }
+        
+        std::vector<uint16_t> name_buffer(file_name_struct.name_length);
+        global_reader->read(reinterpret_cast<uint8_t*>(name_buffer.data()), 
+                          file_name_struct.name_length * sizeof(uint16_t));
+        
+        std::string file_name;
+        for (uint16_t unicode_char : name_buffer) {
+            if (unicode_char < 128) { 
+                file_name += static_cast<char>(unicode_char);
+            } else {
+                file_name += '?';
+            }
+        }
+        
+        return file_name;
+    }
+    
+    return "";  
 }
