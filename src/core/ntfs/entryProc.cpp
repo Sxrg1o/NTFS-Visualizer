@@ -81,19 +81,27 @@ std::vector<bool> get_entries_status(uint64_t start, uint64_t count) {
     dataAttr bitmap_data = read_data_attribute(global_reader, bitmap_attr, 0);
     
     uint64_t start_byte = start / 8;
-    uint64_t chunk = start_byte / 200; 
-    
-    auto bitmap_chunk = read_data_portion(global_reader, bitmap_data, chunk, 200, 0);
+    uint64_t chunk = start_byte / 200;
+    auto bitmap_chunk = read_data_portion(global_reader, bitmap_data, chunk * 200, 200, 0);
     
     std::vector<bool> status;
     uint64_t bit_offset = start % 8;
     
     for (uint64_t i = 0; i < count && (i + start) < bitmap_data.logical_size * 8; i++) {
-        uint64_t current_byte_idx = (i + bit_offset) / 8;
-        uint64_t current_bit = (i + bit_offset) % 8;
+        uint64_t absolute_bit = start + i;
+        uint64_t byte_needed = absolute_bit / 8;
+        uint64_t chunk_needed = byte_needed / 200;      
         
-        if (current_byte_idx < bitmap_chunk.size()) {
-            status.push_back((bitmap_chunk[current_byte_idx] & (1 << current_bit)) != 0);
+        if (chunk_needed != chunk) {
+            chunk = chunk_needed;
+            bitmap_chunk = read_data_portion(global_reader, bitmap_data, chunk * 200, 200, 0);
+        }
+        
+        uint64_t byte_in_chunk = byte_needed % 200;
+        uint64_t bit_in_byte = absolute_bit % 8;
+        
+        if (byte_in_chunk < bitmap_chunk.size()) {
+            status.push_back((bitmap_chunk[byte_in_chunk] & (1 << bit_in_byte)) != 0);
         }
     }
     

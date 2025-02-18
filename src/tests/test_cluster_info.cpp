@@ -12,23 +12,51 @@
 
 /** Comentar líneas referentes a pybind para compilar **/
 
-void print_data_attribute(uint64_t entry_number) {
+void print_data_attribute(uint64_t entry_number, uint64_t attribute_type) {
     if (!global_reader) {
         std::cerr << "No file/partition opened" << std::endl;
         return;
     }
 
     mftEntry entry = read_mft_entry(global_reader, entry_number);
-    mftAttr* data_attr = find_attribute(entry, ATTR_BITMAP, 0);  // Just for testing
+    mftAttr* data_attr = find_attribute(entry, ATTR_STDINF, 0);  // Just for testing
     if (!data_attr) {
         std::cerr << "No attribute found in entry " << entry_number << std::endl;
         return;
     }
 
-    dataAttr data = read_data_attribute(global_reader, data_attr, entry_number);
+    standardInfo info = get_stdinf_data(data_attr, entry_number);
+    auto format_filetime = [](uint64_t filetime) {
+        // FILETIME es el número de 100-nanosegundos intervalos desde Enero 1, 1601
+        // Convertir a time_t (segundos desde epoch Unix)
+        const uint64_t WINDOWS_TICK = 10000000;
+        const uint64_t SEC_TO_UNIX_EPOCH = 11644473600LL;
+        time_t timestamp = (filetime / WINDOWS_TICK - SEC_TO_UNIX_EPOCH);
+        
+        char buffer[30];
+        struct tm* timeinfo = localtime(&timestamp);
+        strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
+        return std::string(buffer);
+    };
+
+    std::cout << "\n$STANDARD_INFORMATION Attribute Values:" << std::endl;
+    std::cout << "Created: " << format_filetime(info.creation_time) << std::endl;
+    std::cout << "Modified: " << format_filetime(info.modified_time) << std::endl;
+    std::cout << "MFT Modified: " << format_filetime(info.mft_modified_time) << std::endl;
+    std::cout << "Accessed: " << format_filetime(info.accessed_time) << std::endl;
+    std::cout << "DOS Permissions: 0x" << std::hex << info.dos_perms << std::dec << std::endl;
+    std::cout << "Max Version: " << info.max_version << std::endl;
+    std::cout << "Version: " << info.version << std::endl;
+    std::cout << "Class ID: " << info.class_id << std::endl;
+    //std::cout << "Owner ID: " << info.owner_id << std::endl;
+    //std::cout << "Security ID: " << info.security_id << std::endl;
+    //std::cout << "Quota Charged: " << info.quota_charged << std::endl;
+    //std::cout << "Update Sequence Number: " << info.usn << std::endl;
+
+    /*dataAttr data = read_data_attribute(global_reader, data_attr, entry_number);
 
     std::cout << "Entry number: " << entry_number << std::endl;
-    std::cout << "Attribute type: $BITMAP" << std::endl;      // Just for testing
+    std::cout << "Attribute type: $DATA" << std::endl;      // Just for testing
     std::cout << "Resident: " << (data.is_resident ? "Yes" : "No") << std::endl;
     std::cout << "Logical size: " << data.logical_size << " bytes" << std::endl;
 
@@ -38,6 +66,12 @@ void print_data_attribute(uint64_t entry_number) {
         if (i > 0 && i % 16 == 0) std::cout << std::endl;
         std::cout << std::hex << std::setw(2) << std::setfill('0') 
                   << static_cast<int>(data_portion[i]) << " ";
+    }
+    std::cout << std::dec << std::endl;
+    std::cout << "\nData content (ascii):\n";
+    for (size_t i = 0; i < data_portion.size(); ++i) {
+        if (i > 0 && i % 16 == 0) std::cout << std::endl;
+        std::cout << static_cast<char>(data_portion[i]);
     }
     std::cout << std::dec << std::endl;
 
@@ -56,9 +90,11 @@ void print_data_attribute(uint64_t entry_number) {
             }
             std::cout << ", Sparse: " << (run.is_sparse ? "Yes" : "No") << std::endl;
         }
-    }
+    }*/
 
-    std::vector<mftEntry> list = read_entries(global_reader, 0);
+
+
+    /*std::vector<mftEntry> list = read_entries(global_reader, 60);
     for(mftEntry entry : list) {
         std::cout << "File name: " << get_file_name(entry) << std::endl;
         for(auto &attr : entry.attrs) {
@@ -66,7 +102,7 @@ void print_data_attribute(uint64_t entry_number) {
             std::cout << "\tResident: " << (attr.header.resident_flag ? "Yes" : "No") << std::endl;
         }        
         std::cout << std::endl;
-    }
+    }*/
 
     /*ClusterStatus status = analyze_clusters(0);
     std::cout << "Cluster status:\n";
@@ -85,13 +121,14 @@ void print_data_attribute(uint64_t entry_number) {
 }
 
 int main(int argc, char* argv[]) {
-    if (argc != 3) {
-        std::cerr << "Usage: " << argv[0] << " <image_path> <entry_number>" << std::endl;
+    if (argc != 4) {
+        std::cerr << "Usage: " << argv[0] << " <image_path> <entry_number> <attribute_type>" << std::endl;
         return 1;
     }
 
     std::string image_path = argv[1];
     uint64_t entry_number = std::stoull(argv[2]);
+    uint64_t attribute_type = std::stoull(argv[3]);
 
     if (!read_image(image_path)) {
         std::cerr << "Failed to open image: " << image_path << std::endl;
@@ -102,7 +139,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    print_data_attribute(entry_number);
+    print_data_attribute(entry_number, attribute_type);
     close_image();
 
     return 0;

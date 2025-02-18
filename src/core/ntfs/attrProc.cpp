@@ -193,3 +193,19 @@ std::string get_file_name(mftEntry entry) {
     
     return "";  
 }
+
+/*** Processing specific attributes ***/
+
+// Processes $STANDARD_INFORMATION attribute
+standardInfo get_stdinf_data(mftAttr* attr, uint64_t entry_number) {
+    dataAttr data = read_data_attribute(global_reader, attr, 0);
+    auto bytes = read_data_portion(global_reader, data, 0, data.logical_size, entry_number);
+
+    standardInfo result;
+    if(!StructReader::from_bytes(result, bytes)) {
+        std::cerr << "Error reading vector of bytes" << std::endl; 
+        return {};
+    }
+
+    return result;
+}

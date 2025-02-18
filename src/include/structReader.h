@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <memory>
 #include <iostream>
+#include <cstring>
 
 class StructReader {
 public:
@@ -14,7 +15,7 @@ public:
                      "Solo se pueden leer estructuras standard-layout");
         
         if (!reader) {
-            std::cerr << "Reader inválido" << std::endl;
+            std::cerr << "Reader inválido" << std::endl ;
             return false;
         }
 
@@ -26,6 +27,21 @@ public:
             return false;
         }
 
+        return true;
+    }
+
+    template<typename T>
+    static bool from_bytes(T& struct_obj, const std::vector<uint8_t>& bytes) {
+        static_assert(std::is_standard_layout<T>::value,
+            "Solo se pueden convertir estructuras standard-layout");
+        
+        if (bytes.size() < sizeof(T)) {
+            std::cerr << "Vector de bytes demasiado pequeño. Tamaño: "
+                << bytes.size() << " bytes, se necesitan " << sizeof(T) << std::endl;
+            return false;
+        }
+
+        std::memcpy(&struct_obj, bytes.data(), sizeof(T));
         return true;
     }
 

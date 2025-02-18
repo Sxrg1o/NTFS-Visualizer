@@ -231,10 +231,10 @@ typedef struct {
 	uint32_t max_version;
 	uint32_t version;
 	uint32_t class_id;
-	uint32_t owner_id;
-	uint32_t security_id;
-	uint64_t quota_charged;
-	uint64_t usn;
+	//uint32_t owner_id;
+	//uint32_t security_id;
+	//uint64_t quota_charged;
+	//uint64_t usn;
 } standardInfo;
 
 // Flags
