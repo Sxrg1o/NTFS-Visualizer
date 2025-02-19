@@ -7,6 +7,28 @@
 #include "../../include/HexPrinter.h"
 #include <vector>
 #include <cstdint>
+#include <algorithm>
+
+// Need to read $Data attribute for $AttrDef entry (4) to get the names and types of attributes
+std::unordered_map<uint32_t, attrDefEntry> attrTypeNames = {};
+
+std::unordered_map<uint32_t, std::string> dosPermFlags = {
+    {STDINF_READONLY, "Read-only"},
+    {STDINF_HIDDEN, "Hidden"},
+    {STDINF_SYSTEM, "System"},
+    {STDINF_ARCHIVE, "Archive"},
+    {STDINF_DEVICE, "Device"},
+    {STDINF_NORMAL, "Normal"},
+    {STDINF_TEMPORARY, "Temporary"},
+    {STDINF_SPARSE_FILE, "Sparse"},
+    {STDINF_REPARSE_POINT, "Reparse"},
+    {STDINF_COMPRESSED, "Compressed"},
+    {STDINF_OFFLINE, "Offline"},
+    {STDINF_NOT_CONTENT_INDEXED, "Not indexed"},
+    {STDINF_ENCRYPTED, "Encrypted"}
+};
+
+volumeInfo volume_information = {};
 
 uint64_t read_var_length_number(const uint8_t* data, uint8_t size) {
     uint64_t result = 0;
@@ -196,9 +218,98 @@ std::string get_file_name(mftEntry entry) {
 
 /*** Processing specific attributes ***/
 
-// First read the $Volume_Information attribute in $Volume entry (3) to check version
+void get_attr_def_info() {
+    mftEntry entry = read_mft_entry(global_reader, MDF_ATTRDEF);
+    mftAttr *attr_def_attr = find_attribute(entry, ATTR_DATA, 0);
+    dataAttr attr_def_data = read_data_attribute(global_reader, attr_def_attr, MDF_ATTRDEF);
+    std::vector<uint8_t> data_portion = read_data_portion(global_reader, attr_def_data, 0, attr_def_data.logical_size, MDF_ATTRDEF);
+    
+    std::unordered_map<uint32_t, attrDefEntry> local_attrTypeNames;
+    
+    size_t num_entries = data_portion.size() / sizeof(attrDef);
+    
+    for (size_t i = 0; i < num_entries; i++) {
+        attrDef def;
+        size_t offset = i * sizeof(attrDef);
+        
+        if (!StructReader::from_bytes(def, std::vector<uint8_t>(
+                data_portion.begin() + offset,
+                data_portion.begin() + offset + sizeof(attrDef)))) {
+            std::cerr << "Error reading $AttrDef" << i << std::endl;
+            continue;
+        }
+        
+        std::string attrName;
+        for (int j = 0; j < 16; j++) {
+            char16_t* chars = reinterpret_cast<char16_t*>(&def.name[j]);
+            for (int k = 0; k < 4; k++) {  
+                if (chars[k] == 0) break;
+                if (chars[k] <= 127) {
+                    attrName.push_back(static_cast<char>(chars[k]));
+                }
+            }
+        }
+        
+        while (!attrName.empty() && (attrName.back() == ' ' || attrName.back() == '\0')) {
+            attrName.pop_back();
+        }
+        
+        if (attrName.empty()) continue;
+        
+        std::string finalName = attrName;
+        if (!finalName.empty() && finalName[0] == '$') {
+            finalName = finalName.substr(1);
+        }
+        
+        attrDefEntry info;
+        info.name = finalName;
+        info.flags = def.flags;
+        info.min_size = def.min_size;
+        info.max_size = def.max_size;
+        
+        local_attrTypeNames[def.type] = info;
+    }
+    
+    attrTypeNames = local_attrTypeNames;
+}
+
 // Depending on the version, some attributes have different data structures
-// Also, need to read $Data attribute for $AttrDef entry (4) to get the names and types of attributes
+
+void get_volume_info() {
+    mftEntry entry = read_mft_entry(global_reader, MDF_VOL);
+    mftAttr *volume_info_attr = find_attribute(entry, ATTR_VOLUME_INFO, 0);
+    dataAttr volume_info_data = read_data_attribute(global_reader, volume_info_attr, MDF_VOL);
+    std::vector<uint8_t> data_portion = read_data_portion(global_reader, volume_info_data, 0, volume_info_data.logical_size, MDF_VOL);    
+
+    volumeInfo local_volume_info = {};
+    if (!StructReader::from_bytes(local_volume_info, data_portion)) {
+        std::cerr << "Error reading Volume_Information structure" << std::endl;
+        return;
+    }
+
+    volume_information = local_volume_info;
+}
+
+std::string get_attr_name(uint32_t type) {
+    auto it = attrTypeNames.find(type);
+    if (it != attrTypeNames.end()) {
+        return it->second.name;
+    }
+    std::stringstream ss;
+    ss << "0x" << std::hex << std::uppercase << type;
+    return ss.str();
+}
+
+std::string get_file_permissions_string(uint32_t perms) {
+    std::string result;
+    for (const auto& [flag, name] : dosPermFlags) {
+        if (perms & flag) {
+            if (!result.empty()) result += " ";
+            result += name;
+        }
+    }
+    return result.empty() ? "None" : result;
+}
 
 // Processes $STANDARD_INFORMATION attribute
 standardInfo get_stdinf_data(mftAttr* attr, uint64_t entry_number) {

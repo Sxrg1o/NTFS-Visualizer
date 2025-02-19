@@ -88,24 +88,13 @@ void print_data_attribute(uint64_t entry_number, uint64_t attribute_type) {
         }
     }*/
 
+    get_attr_def_info();
+    get_volume_info();
+
     std::vector<mftEntry> list = read_entries(global_reader, 0);
     for(mftEntry entry : list) {
         mftAttr* stdinf_attr = find_attribute(entry, ATTR_STDINF, 0);
         standardInfo stdinf = get_stdinf_data(stdinf_attr, entry.number);
-        std::string types = "";
-        if(stdinf.dos_perms & STDINF_READONLY) types += "Read-only ";
-        if(stdinf.dos_perms & STDINF_HIDDEN) types += "Hidden ";
-        if(stdinf.dos_perms & STDINF_SYSTEM) types += "System ";
-        if(stdinf.dos_perms & STDINF_ARCHIVE) types += "Archive ";
-        if(stdinf.dos_perms & STDINF_DEVICE) types += "Device ";
-        if(stdinf.dos_perms & STDINF_NORMAL) types += "Normal ";
-        if(stdinf.dos_perms & STDINF_TEMPORARY) types += "Temporary ";
-        if(stdinf.dos_perms & STDINF_SPARSE_FILE) types += "Sparse ";
-        if(stdinf.dos_perms & STDINF_REPARSE_POINT) types += "Reparse ";
-        if(stdinf.dos_perms & STDINF_COMPRESSED) types += "Compressed ";
-        if(stdinf.dos_perms & STDINF_OFFLINE) types += "Offline ";
-        if(stdinf.dos_perms & STDINF_NOT_CONTENT_INDEXED) types += "Not indexed ";
-        if(stdinf.dos_perms & STDINF_ENCRYPTED) types += "Encrypted ";
         mftAttr* data_attr = find_attribute(entry, ATTR_DATA, 0);
         uint64_t data_size;
         if(data_attr == nullptr) {
@@ -116,9 +105,9 @@ void print_data_attribute(uint64_t entry_number, uint64_t attribute_type) {
             data_size = data_attr->content.non_resident_attr.actual_size;
         }
         
-        std::cout << std::left << std::setw(5) << entry.number << std::setw(20) << get_file_name(entry) << std::setw(10) << data_size << std::right << types << std::endl;
+        std::cout << std::left << std::setw(5) << entry.number << std::setw(20) << get_file_name(entry) << std::setw(10) << data_size << std::right << get_file_permissions_string(stdinf.dos_perms) << std::endl;
         for(auto &attr : entry.attrs) {
-            std::cout << "Attribute type: 0x" << attr.header.type << (attr.header.resident_flag ? " (Non-resident)" : " (Resident)") << std::endl; 
+            std::cout << "Attribute type: " << get_attr_name(attr.header.type) << (attr.header.resident_flag ? " (Non-resident)" : " (Resident)") << std::endl; 
         }        
         std::cout << std::endl;
     }

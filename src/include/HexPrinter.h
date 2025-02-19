@@ -27,7 +27,7 @@ public:
             }
             out << "|\n";
         }
-        out << std::dec;
+        out << std::dec << std::setfill(' ');
     }
 
     template<typename T>
@@ -51,6 +51,6 @@ public:
             }
             out << "|\n";
         }
-        out << std::dec;
+        out << std::dec << std::setfill(' ');
     }
 };

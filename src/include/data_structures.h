@@ -222,6 +222,7 @@ typedef struct {
 
 // $STANDARD_INFORMATION
 
+#pragma pack(push, 1)
 typedef struct {
 	uint64_t creation_time;
 	uint64_t modified_time;
@@ -236,6 +237,7 @@ typedef struct {
 	//uint64_t quota_charged;
 	//uint64_t usn;
 } standardInfo;
+#pragma pack(pop)
 
 // Flags
 
@@ -257,12 +259,14 @@ typedef struct {
 
 // $VOLUME_INFORMATION
 
+#pragma pack(push, 1)
 typedef struct {
 	uint64_t unused;
 	uint8_t max_version;
 	uint8_t min_version;
 	uint16_t flags;
 } volumeInfo;
+#pragma pack(pop)
 
 // Flags
 #define VOL_DIRTY 0x0001
