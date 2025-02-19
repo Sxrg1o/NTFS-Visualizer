@@ -196,6 +196,10 @@ std::string get_file_name(mftEntry entry) {
 
 /*** Processing specific attributes ***/
 
+// First read the $Volume_Information attribute in $Volume entry (3) to check version
+// Depending on the version, some attributes have different data structures
+// Also, need to read $Data attribute for $AttrDef entry (4) to get the names and types of attributes
+
 // Processes $STANDARD_INFORMATION attribute
 standardInfo get_stdinf_data(mftAttr* attr, uint64_t entry_number) {
     dataAttr data = read_data_attribute(global_reader, attr, 0);

@@ -18,7 +18,7 @@ void print_data_attribute(uint64_t entry_number, uint64_t attribute_type) {
         return;
     }
 
-    mftEntry entry = read_mft_entry(global_reader, entry_number);
+    /*mftEntry entry = read_mft_entry(global_reader, entry_number);
     mftAttr* data_attr = find_attribute(entry, ATTR_STDINF, 0);  // Just for testing
     if (!data_attr) {
         std::cerr << "No attribute found in entry " << entry_number << std::endl;
@@ -47,11 +47,7 @@ void print_data_attribute(uint64_t entry_number, uint64_t attribute_type) {
     std::cout << "DOS Permissions: 0x" << std::hex << info.dos_perms << std::dec << std::endl;
     std::cout << "Max Version: " << info.max_version << std::endl;
     std::cout << "Version: " << info.version << std::endl;
-    std::cout << "Class ID: " << info.class_id << std::endl;
-    //std::cout << "Owner ID: " << info.owner_id << std::endl;
-    //std::cout << "Security ID: " << info.security_id << std::endl;
-    //std::cout << "Quota Charged: " << info.quota_charged << std::endl;
-    //std::cout << "Update Sequence Number: " << info.usn << std::endl;
+    std::cout << "Class ID: " << info.class_id << std::endl;*/
 
     /*dataAttr data = read_data_attribute(global_reader, data_attr, entry_number);
 
@@ -92,17 +88,40 @@ void print_data_attribute(uint64_t entry_number, uint64_t attribute_type) {
         }
     }*/
 
-
-
-    /*std::vector<mftEntry> list = read_entries(global_reader, 60);
+    std::vector<mftEntry> list = read_entries(global_reader, 0);
     for(mftEntry entry : list) {
-        std::cout << "File name: " << get_file_name(entry) << std::endl;
+        mftAttr* stdinf_attr = find_attribute(entry, ATTR_STDINF, 0);
+        standardInfo stdinf = get_stdinf_data(stdinf_attr, entry.number);
+        std::string types = "";
+        if(stdinf.dos_perms & STDINF_READONLY) types += "Read-only ";
+        if(stdinf.dos_perms & STDINF_HIDDEN) types += "Hidden ";
+        if(stdinf.dos_perms & STDINF_SYSTEM) types += "System ";
+        if(stdinf.dos_perms & STDINF_ARCHIVE) types += "Archive ";
+        if(stdinf.dos_perms & STDINF_DEVICE) types += "Device ";
+        if(stdinf.dos_perms & STDINF_NORMAL) types += "Normal ";
+        if(stdinf.dos_perms & STDINF_TEMPORARY) types += "Temporary ";
+        if(stdinf.dos_perms & STDINF_SPARSE_FILE) types += "Sparse ";
+        if(stdinf.dos_perms & STDINF_REPARSE_POINT) types += "Reparse ";
+        if(stdinf.dos_perms & STDINF_COMPRESSED) types += "Compressed ";
+        if(stdinf.dos_perms & STDINF_OFFLINE) types += "Offline ";
+        if(stdinf.dos_perms & STDINF_NOT_CONTENT_INDEXED) types += "Not indexed ";
+        if(stdinf.dos_perms & STDINF_ENCRYPTED) types += "Encrypted ";
+        mftAttr* data_attr = find_attribute(entry, ATTR_DATA, 0);
+        uint64_t data_size;
+        if(data_attr == nullptr) {
+            data_size = 0;
+        } else if(data_attr->header.resident_flag == ATTR_RESIDENT) {
+            data_size = data_attr->content.resident_attr.size;
+        } else {
+            data_size = data_attr->content.non_resident_attr.actual_size;
+        }
+        
+        std::cout << std::left << std::setw(5) << entry.number << std::setw(20) << get_file_name(entry) << std::setw(10) << data_size << std::right << types << std::endl;
         for(auto &attr : entry.attrs) {
-            std::cout << "Attribute type: " << attr.header.type << std::endl;
-            std::cout << "\tResident: " << (attr.header.resident_flag ? "Yes" : "No") << std::endl;
+            std::cout << "Attribute type: 0x" << attr.header.type << (attr.header.resident_flag ? " (Non-resident)" : " (Resident)") << std::endl; 
         }        
         std::cout << std::endl;
-    }*/
+    }
 
     /*ClusterStatus status = analyze_clusters(0);
     std::cout << "Cluster status:\n";
